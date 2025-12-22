@@ -2058,7 +2058,7 @@ function ReforgeLite:CreateMethodWindow()
     frame:ClearAllPoints()
     frame:SetPoint("LEFT", ReforgingFrame, "RIGHT")
   end
-  
+
   if not self.db.showHelp then
     GUI:SetHelpButtonsShown(false)
   end
