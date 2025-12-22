@@ -520,9 +520,9 @@ function ReforgeLite:InitClassPresets()
       [SPEC_IDS.HUNTER.survival] = MeleePreset(33, 32, 27, 33, 21),
     },
     ["MAGE"] = {
-      [SPEC_IDS.MAGE.arcane] = CasterPreset(145, 52, 60, 63),
+      [SPEC_IDS.MAGE.arcane] = CasterPreset(145, 59, 64, 70),
       [SPEC_IDS.MAGE.fire] = CasterPreset(121, 94, 95, 59),
-      [SPEC_IDS.MAGE.frost] = CasterPreset(115, 49, 51, 44),
+      [SPEC_IDS.MAGE.frost] = CasterPreset(155, 54, 81, 52),
     },
     ["MONK"] = {
       [SPEC_IDS.MONK.brewmaster] = {
