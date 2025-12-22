@@ -497,7 +497,7 @@ function ReforgeLite:ValidateWoWSimsString(importStr)
       item.src, item.dst = unpack(self.reforgeTable[simItemInfo.reforging - REFORGE_TABLE_BASE])
       local srcStat, dstStat = ITEM_STATS[item.src], ITEM_STATS[item.dst]
       if not playerItemInfo.originalStats[srcStat.name] then
-        tinsert(errorsFound, L["%s > %s on slot %s - %s does not have %s"]:format(srcStat.long, dstStat.long, slot, playerItemInfo.link, srcStat.long))
+        tinsert(errorsFound, L["%s > %s on %s: %s does not have %s"]:format(srcStat.long, dstStat.long, _G[ITEM_SLOTS[slot]], playerItemInfo.link, srcStat.long))
       end
     else
       item.src, item.dst = nil, nil
