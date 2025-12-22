@@ -27,7 +27,7 @@ local function GetDataFrame(anchor)
     displayFrame:SetCallback("OnEnterStatusBar", function(widget)
         if widget.statustext:IsTruncated() then
             GameTooltip:SetOwner(widget.statustext, "ANCHOR_LEFT")
-            GameTooltip:AddLine(widget.statustext:GetText(), nil, nil, nil, true)
+            GameTooltip:AddLine(widget.statustext:GetText())
             GameTooltip:Show()
         end
     end)

@@ -483,9 +483,11 @@ function ReforgeLite:ValidateWoWSimsString(importStr)
     return false, L['This import is missing player equipment data! Please make sure "Gear" is selected when exporting from WoWSims.']
   end
   local newItems = CopyTable((self.pdb.method or self:InitializeMethod()).items)
+  local errorsFound = {}
   for slot, item in ipairs(newItems) do
+    local playerItemInfo = self.itemData[slot].itemInfo
     local simItemInfo = wowsims.player.equipment.items[slot] or {}
-    if simItemInfo.id ~= self.itemData[slot].itemInfo.itemId then
+    if simItemInfo.id ~= playerItemInfo.itemId then
       local swappedSlotId = IsItemSwapped(slot, wowsims)
       if swappedSlotId then
         simItemInfo = wowsims.player.equipment.items[swappedSlotId]
@@ -493,9 +495,16 @@ function ReforgeLite:ValidateWoWSimsString(importStr)
     end
     if simItemInfo.reforging then
       item.src, item.dst = unpack(self.reforgeTable[simItemInfo.reforging - REFORGE_TABLE_BASE])
+      local srcStat, dstStat = ITEM_STATS[item.src], ITEM_STATS[item.dst]
+      if not playerItemInfo.originalStats[srcStat.name] then
+        tinsert(errorsFound, L["%s > %s on slot %s - %s does not have %s"]:format(srcStat.long, dstStat.long, slot, playerItemInfo.link, srcStat.long))
+      end
     else
       item.src, item.dst = nil, nil
     end
+  end
+  if errorsFound then
+    return false, L["Invalid import:"] .. " " .. table.concat(errorsFound, "\n")
   end
   return true, newItems
 end
@@ -1757,8 +1766,7 @@ function ReforgeLite:UpdateItems()
 
   for _, v in ipairs (self.itemData) do
     local item = self.playerData[v.slotId]
-    local stats = {}
-    local reforgeSrc, reforgeDst
+    local stats, reforgeSrc, reforgeDst
     if item:IsItemEmpty() then
       wipe(v.itemInfo)
       v.texture:SetTexture(v.slotTexture)
@@ -1773,9 +1781,10 @@ function ReforgeLite:UpdateItems()
         reforge = GetReforgeID(v.slotId),
         slotId = v.slotId,
       }
+      v.itemInfo.originalStats = GetItemStats(v.itemInfo)
       v.texture:SetTexture(item:GetItemIcon())
       v.quality:SetVertexColor(item:GetItemQualityColor().color:GetRGB())
-      stats = GetItemStats(v.itemInfo)
+      stats = CopyTable(v.itemInfo.originalStats)
       if v.itemInfo.reforge then
         local srcId, dstId = unpack(reforgeTable[v.itemInfo.reforge])
         reforgeSrc, reforgeDst = ITEM_STATS[srcId].name, ITEM_STATS[dstId].name
@@ -1787,11 +1796,9 @@ function ReforgeLite:UpdateItems()
     v.quality:SetShown(not item:IsItemEmpty())
     v.locked:SetShown(self.pdb.itemsLocked[v.itemInfo.itemGUID])
 
-    local statsOrig = GetItemStats(v.itemInfo)
-
     for j, s in ipairs (ITEM_STATS) do
-      local currentValue = stats[s.name]
-      local origValue = statsOrig[s.name]
+      local currentValue = (stats or {})[s.name]
+      local origValue = (v.itemInfo.originalStats or {})[s.name]
 
       if (origValue and origValue ~= 0) or (currentValue and currentValue ~= 0) then
         columnHasData[j] = true
