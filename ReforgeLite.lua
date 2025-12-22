@@ -503,7 +503,7 @@ function ReforgeLite:ValidateWoWSimsString(importStr)
       item.src, item.dst = nil, nil
     end
   end
-  if errorsFound then
+  if errorsFound[1] then
     return false, L["Invalid import:"] .. " " .. table.concat(errorsFound, "\n")
   end
   return true, newItems
