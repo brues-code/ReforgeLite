@@ -489,8 +489,6 @@ function ReforgeLite:ValidateWoWSimsString(importStr)
       local swappedSlotId = IsItemSwapped(slot, wowsims)
       if swappedSlotId then
         simItemInfo = wowsims.player.equipment.items[swappedSlotId]
-      else
-        return false, { itemId = simItemInfo.id, slot = slot }
       end
     end
     if simItemInfo.reforging then
