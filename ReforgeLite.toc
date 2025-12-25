@@ -24,5 +24,6 @@ ExportImport.lua
 
 locales\[TextLocale].lua
 #@do-not-package@
+## AllowAddOnTableAccess: 1
 dev\Util.lua
 #@end-do-not-package@
