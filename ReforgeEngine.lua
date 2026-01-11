@@ -415,7 +415,7 @@ function ReforgeLite:ComputeReforgeCore(reforgeOptions)
   for i, opt in ipairs(reforgeOptions) do
     local newscores, newcodes = {}, {}
     for k, score in pairs(scores) do
-      self:RunYieldCheck(200000)
+      self:RunYieldCheck(50000)
       local s1, s2 = k % self.TABLE_SIZE, floor(k / self.TABLE_SIZE)
       for j = 1, #opt do
         local nscore = score + opt[j].score
@@ -435,7 +435,7 @@ function ReforgeLite:ChooseReforgeClassic (data, reforgeOptions, scores, codes)
   local bestCode = {nil, nil, nil, nil}
   local bestScore = {0, 0, 0, 0}
   for k, score in pairs(scores) do
-    self:RunYieldCheck(500000)
+    self:RunYieldCheck(100000)
     local s1 = data.caps[1].init
     local s2 = data.caps[2].init
     local code = codes[k]
