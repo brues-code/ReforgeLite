@@ -365,7 +365,7 @@ function addonTable.GetItemStatsFromTooltip(itemInfo)
     return GetItemStats(itemInfo.link)
   end
 
-  local cached = tooltipStatsCache[itemInfo.itemId][itemInfo.ilvl]
+  local cached = tooltipStatsCache[itemInfo.itemGUID][itemInfo.ilvl]
   if cached then
     return CopyTable(cached)
   end
@@ -414,7 +414,7 @@ function addonTable.GetItemStatsFromTooltip(itemInfo)
     stats[destName] = nil
   end
 
-  tooltipStatsCache[itemInfo.itemId][itemInfo.ilvl] = stats
+  tooltipStatsCache[itemInfo.itemGUID][itemInfo.ilvl] = stats
   return CopyTable(stats)
 end
 
