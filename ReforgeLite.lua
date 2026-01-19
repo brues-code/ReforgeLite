@@ -460,22 +460,6 @@ end
 
 addonTable.WoWSimsOriginTag = "WoWSims"
 
-local function IsItemSwapped(slot, wowsims)
-  local SWAPPABLE_SLOTS = {
-    [INVSLOT_FINGER1] = INVSLOT_FINGER2,
-    [INVSLOT_FINGER2] = INVSLOT_FINGER1,
-    [INVSLOT_TRINKET1] = INVSLOT_TRINKET2,
-    [INVSLOT_TRINKET2] = INVSLOT_TRINKET1
-  }
-  local oppositeSlotId = SWAPPABLE_SLOTS[GetInventorySlotInfo(ITEM_SLOTS[slot])]
-  if not oppositeSlotId then return end
-  local slotItemId = (wowsims.player.equipment.items[slot] or {}).id or 0
-  local oppositeSlotItemId = (wowsims.player.equipment.items[oppositeSlotId] or {}).id or 0
-  if C_Item.IsEquippedItem(slotItemId) and C_Item.IsEquippedItem(oppositeSlotItemId) then
-    return oppositeSlotId
-  end
-end
-
 function ReforgeLite:ValidateWoWSimsString(importStr)
   local success, wowsims = pcall(function () return C_EncodingUtil.DeserializeJSON(importStr) end)
   if not success or type(wowsims) ~= "table" then return false, wowsims end
@@ -483,28 +467,13 @@ function ReforgeLite:ValidateWoWSimsString(importStr)
     return false, L['This import is missing player equipment data! Please make sure "Gear" is selected when exporting from WoWSims.']
   end
   local newItems = CopyTable((self.pdb.method or self:InitializeMethod()).items)
-  local errorsFound = {}
   for slot, item in ipairs(newItems) do
-    local playerItemInfo = self.itemData[slot].itemInfo
     local simItemInfo = wowsims.player.equipment.items[slot] or {}
-    if simItemInfo.id ~= playerItemInfo.itemId then
-      local swappedSlotId = IsItemSwapped(slot, wowsims)
-      if swappedSlotId then
-        simItemInfo = wowsims.player.equipment.items[swappedSlotId]
-      end
-    end
     if simItemInfo.reforging then
       item.src, item.dst = unpack(self.reforgeTable[simItemInfo.reforging - REFORGE_TABLE_BASE])
-      local srcStat, dstStat = ITEM_STATS[item.src], ITEM_STATS[item.dst]
-      if not playerItemInfo.originalStats[srcStat.name] then
-        tinsert(errorsFound, L["%s > %s on %s: %s does not have %s"]:format(srcStat.long, dstStat.long, _G[ITEM_SLOTS[slot]], playerItemInfo.link, srcStat.long))
-      end
     else
       item.src, item.dst = nil, nil
     end
-  end
-  if errorsFound[1] then
-    return false, L["Invalid import:"] .. " " .. table.concat(errorsFound, "\n")
   end
   return true, newItems
 end
