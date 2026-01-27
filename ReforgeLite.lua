@@ -464,7 +464,7 @@ function ReforgeLite:ValidateWoWSimsString(importStr)
   local success, wowsims = pcall(function () return C_EncodingUtil.DeserializeJSON(importStr) end)
   if not success or type(wowsims) ~= "table" then return false, wowsims end
   if not (wowsims.player or {}).equipment then
-    return false, L['This import is missing player equipment data! Please make sure "Gear" is selected when exporting from WoWSims.']
+    return false, L["This import is missing player equipment data! Please make sure 'Gear' is selected when exporting from WoWSims."]
   end
   local newItems = CopyTable((self.pdb.method or self:InitializeMethod()).items)
   for slot, item in ipairs(newItems) do
