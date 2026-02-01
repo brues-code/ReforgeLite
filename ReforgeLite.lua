@@ -99,7 +99,7 @@ local DefaultDB = {
     methodOrigin = addonName,
     itemsLocked = {},
     categoryStates = {},
-    useBranchAndBound = false,
+    useBranchBound = true,
   },
   class = {
     customPresets = {}
