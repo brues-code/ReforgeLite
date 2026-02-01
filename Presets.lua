@@ -115,6 +115,10 @@ end
 function ReforgeLite:GetRangedHasteBonus()
   return self:GetNonSpellHasteBonus(GetRangedHaste, CR_HASTE_RANGED)
 end
+function ReforgeLite:GetMasteryBonus()
+  local mastery, bonusCoeff = GetMasteryEffect()
+  return mastery - GetCombatRatingBonus(CR_MASTERY) * bonusCoeff, bonusCoeff
+end
 ---Gets spell haste bonus multiplier from buffs
 ---@return number bonus Spell haste multiplier from buffs
 function ReforgeLite:GetSpellHasteBonus()

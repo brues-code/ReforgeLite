@@ -1052,7 +1052,7 @@ function ReforgeLite:AddCapPoint (i, loading)
     local rating = pointValue / self:RatingPerPoint(cap.stat)
 
     local function formatWithBonus(val, bonus)
-      val = RoundToSignificantDigits(val, 1)
+      val = RoundToSignificantDigits(val, 2)
       if bonus > 0 then
         return ("%.2f%% + %s%% = %.2f%%"):format(val, bonus, val + bonus)
       else
@@ -1070,6 +1070,10 @@ function ReforgeLite:AddCapPoint (i, loading)
     elseif cap.stat == statIds.HASTE then
       local meleeHaste, rangedHaste, spellHaste = self:CalcHasteWithBonuses(rating)
       ratingText = ("%s: %.2f%%\n%s: %.2f%%\n%s: %.2f%%"):format(MELEE, meleeHaste, RANGED, rangedHaste, STAT_CATEGORY_SPELL, spellHaste)
+    elseif cap.stat == statIds.MASTERY then
+      local bonusMastery, bonusCoeff = self:GetMasteryBonus()
+      local masteryFromGear = RoundToSignificantDigits(rating * bonusCoeff, 2)
+      ratingText = formatWithBonus(bonusMastery, masteryFromGear)
     else
       ratingText = ("%.2f"):format(rating)
     end
