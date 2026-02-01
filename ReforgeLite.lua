@@ -647,7 +647,7 @@ end
 
 local function FormatNumber(num)
   if num == 0 then return num end
-  return (num > 0 and "+" or "-") .. FormatLargeNumber(abs(num))
+  return (num > 0 and "+" or "-") .. BreakUpLargeNumbers(abs(num))
 end
 
 local function SetTextDelta (text, value, cur, override)
@@ -1775,7 +1775,7 @@ function ReforgeLite:UpdateItems()
       end
 
       if currentValue and currentValue ~= 0 then
-        v.stats[j]:SetText(FormatLargeNumber(currentValue))
+        v.stats[j]:SetText(BreakUpLargeNumbers(currentValue))
         if s.name == reforgeSrc then
           v.stats[j]:SetTextColor(v.stats[j].fontColors.red:GetRGB())
         elseif s.name == reforgeDst then
@@ -1793,7 +1793,7 @@ function ReforgeLite:UpdateItems()
   local hasNoData = next(columnHasData) == nil
 
   for i, v in ipairs (ITEM_STATS) do
-    self.statTotals[i]:SetText(FormatLargeNumber(v.getter()))
+    self.statTotals[i]:SetText(BreakUpLargeNumbers(v.getter()))
     if columnHasData[i] or hasNoData then
       self.itemTable:ExpandColumn(i)
     else

@@ -149,7 +149,7 @@ read_globals = {
     "SPEC_SHAMAN_RESTORATION",
     "MergeTable",
     "sort",
-    "FormatLargeNumber",
+    "BreakUpLargeNumbers",
     "GetInventoryItemID",
     "PlayerUtil"
 }
