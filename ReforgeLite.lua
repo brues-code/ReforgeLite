@@ -1700,24 +1700,32 @@ end
 function ReforgeLite:RefreshMethodStats()
   if self.pdb.method then
     self:UpdateMethodStats (self.pdb.method)
-  end
-  if self.pdb.method and self.methodStats then
-    local showSpirit = self.pdb.weights[statIds.SPIRIT] > 0 or self.currentSpecRole == "HEALER" or (self.conversion[statIds.SPIRIT] or {})[statIds.HIT]
-    local showSpellHitHelp = (self.conversion[statIds.EXP] or {})[statIds.HIT] and ITEM_STATS[statIds.EXP].mgetter(self.pdb.method) > 0
-    self.expertiseToHitHelpButton:SetShown(self.db.showHelp and showSpellHitHelp)
-    self.expertiseToHitHelpButton:SetEnabled(showSpellHitHelp)
-    for statId, v in ipairs (ITEM_STATS) do
-      local cell = statId - 1
-      local mvalue = v.mgetter (self.pdb.method)
-      self.methodStats:SetCellText(cell, 1, FormatLargeNumber(mvalue))
-      local override
-      mvalue = v.mgetter (self.pdb.method, true)
-      local value = v.getter ()
-      if self:GetStatScore (statId, mvalue) == self:GetStatScore (statId, value) then
-        override = 0
+    if self.methodStats then
+      local showSpirit = self.pdb.weights[statIds.SPIRIT] > 0 or self.currentSpecRole == "HEALER" or (self.conversion[statIds.SPIRIT] or {})[statIds.HIT]
+      local showSpellHitHelp = (self.conversion[statIds.EXP] or {})[statIds.HIT] and ITEM_STATS[statIds.EXP].mgetter(self.pdb.method) > 0
+      self.expertiseToHitHelpButton:SetShown(self.db.showHelp and showSpellHitHelp)
+      self.expertiseToHitHelpButton:SetEnabled(showSpellHitHelp)
+      local anyExpanded = false
+      for statId, v in ipairs(ITEM_STATS) do
+        local cell = statId - 1
+        local mvalue = v.mgetter (self.pdb.method)
+        self.methodStats:SetCellText(cell, 1, BreakUpLargeNumbers(mvalue))
+        local override
+        mvalue = v.mgetter (self.pdb.method, true)
+        local value = v.getter ()
+        if self:GetStatScore (statId, mvalue) == self:GetStatScore (statId, value) then
+          override = 0
+        end
+        SetTextDelta (self.methodStats[statId].delta, mvalue, value, override)
+        local expanded = mvalue > 0 and (statId ~= statIds.SPIRIT or showSpirit)
+        self.methodStats:SetRowExpanded(cell, expanded)
+        anyExpanded = anyExpanded or expanded
       end
-      SetTextDelta (self.methodStats[statId].delta, mvalue, value, override)
-      self.methodStats:SetRowExpanded(cell, mvalue > 0 and (statId ~= statIds.SPIRIT or showSpirit))
+      if not anyExpanded then
+        for statId = 1, ITEM_STAT_COUNT do
+          self.methodStats:SetRowExpanded(statId - 1, statId ~= statIds.SPIRIT or showSpirit)
+        end
+      end
     end
   end
 end
