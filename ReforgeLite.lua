@@ -1271,10 +1271,7 @@ function ReforgeLite:CreateOptionList ()
   self.presetsButton = GUI:CreateFilterDropdown(self.content, L["Presets"], {resizeToTextPadding = 35})
   self.statWeightsCategory:AddFrame(self.presetsButton)
   self:SetAnchor(self.presetsButton, "TOPLEFT", self.statWeightsCategory, "BOTTOMLEFT", 0, -5)
-
-  if self.presetMenuGenerator then
-    self.presetsButton:SetupMenu(self.presetMenuGenerator)
-  end
+  self.presetsButton:SetupMenu(self.presetMenuGenerator)
 
   self.pawnButton = GUI:CreatePanelButton (self.content, L["Import WoWSims/Pawn/QE"], function(btn) self:ImportData() end)
   self.statWeightsCategory:AddFrame (self.pawnButton)
