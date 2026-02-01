@@ -45,15 +45,9 @@ end
 ---Clears focus from all edit boxes
 ---@return nil
 function GUI:ClearEditFocus()
-  for _,v in ipairs(self.editBoxes) do
-    v:ClearFocus()
+  if self.focusedEditBox then
+    self.focusedEditBox:ClearFocus()
   end
-end
-
----Clears focus from all GUI elements
----@return nil
-function GUI:ClearFocus()
-  self:ClearEditFocus()
 end
 
 ---Locks all GUI widgets to prevent interaction during computation
@@ -214,10 +208,12 @@ function GUI:CreateEditBox (parent, width, height, default, setter, opts)
   box:SetText(default)
   box:SetScript("OnEnterPressed", box.ClearFocus)
   box:SetScript("OnEditFocusGained", function(frame)
+    self.focusedEditBox = frame
     frame.prevValue = tonumber(frame:GetText())
     frame:HighlightText()
   end)
   box:SetScript("OnEditFocusLost", function(frame)
+    self.focusedEditBox = nil
     local value = tonumber(frame:GetText())
     if not value then
       value = frame.prevValue or 0
@@ -808,7 +804,7 @@ function GUI:CreateTable (rows, cols, firstRow, firstColumn, gridColor, parent)
     if n < 0 or n > self.cols then
       return
     end
-    if self.colWidth[n] and type(self.colWidth[n]) == "number" then
+    if type(self.colWidth[n]) == "number" then
       self.autoWidthColumns[n] = self.colWidth[n]
     else
       self.autoWidthColumns[n] = enabled
