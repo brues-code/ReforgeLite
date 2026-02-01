@@ -946,7 +946,8 @@ function ReforgeLite:RunAlgorithmComparison()
   self:GetConversion()
 
   local _, specName = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
-  print(("=== %s %s ==="):format(specName or "", addonTable.localeClass))
+  local _, ilvl = GetAverageItemLevel()
+  print(("=== %s %s - %s ilvl ==="):format(specName or "", addonTable.localeClass, ilvl))
 
   local weightsStr = ""
   for i = 1, #self.pdb.weights do
@@ -1033,11 +1034,14 @@ function ReforgeLite:RunAlgorithmComparison()
   local bbConstraintsMet = self:CheckConstraintsSatisfied(bbMethod)
 
   -- Print comparison
+  local function fmtTime(ms)
+    return ms >= 1000 and ("%.2fs"):format(ms / 1000) or ("%.0fms"):format(ms)
+  end
   print("=== Results ===")
-  print(("DP: Score %.1f, Time %.3fms, Constraints %s"):format(
-    dpScore, dpTime, dpConstraintsMet and "Pass" or "Fail"))
-  print(("B&B: Score %.1f, Time %.3fms, Constraints %s"):format(
-    bbScore, bbTime, bbConstraintsMet and "Pass" or "Fail"))
+  print(("DP: Score %.1f, Time %s, Constraints %s"):format(
+    dpScore, fmtTime(dpTime), dpConstraintsMet and "Pass" or "Fail"))
+  print(("B&B: Score %.1f, Time %s, Constraints %s"):format(
+    bbScore, fmtTime(bbTime), bbConstraintsMet and "Pass" or "Fail"))
 
   -- Compare individual choices
   if self.db.debug then
@@ -1056,11 +1060,13 @@ function ReforgeLite:RunAlgorithmComparison()
   end
 
   -- Determine winner
-  local winner = "Tie"
+  local winner
   if dpConstraintsMet ~= bbConstraintsMet then
     winner = dpConstraintsMet and "DP (constraints)" or "B&B (constraints)"
   elseif abs(dpScore - bbScore) > 0.1 then
     winner = dpScore > bbScore and "DP" or "B&B"
+  else
+    winner = dpTime < bbTime and "DP (faster)" or "B&B (faster)"
   end
   print("Winner: " .. winner)
 
