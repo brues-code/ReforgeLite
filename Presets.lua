@@ -702,11 +702,11 @@ function ReforgeLite:InitPresets()
     rootDescription:CreateDivider()
 
     local function GetCapPresetName(presetValue)
-      local value = FindValueInTableIf(self.capPresets, function(preset) return preset.value == presetValue end)
-      return (value or {}).name
+      local value = FindValueInTableIf(self.capPresets, function(preset) return preset.value == presetValue end) or {}
+      return value.name
     end
 
-    local function FormatWeightsTooltip(tooltip, element, preset, addBlank)
+    local function FormatWeightsTooltip(tooltip, element, preset)
       if not preset or not preset.weights then return end
       local statWeights = {}
       for i, weight in ipairs(preset.weights) do
@@ -750,9 +750,6 @@ function ReforgeLite:InitPresets()
           end
         end
       end
-      if addBlank then
-        tooltip:AddLine(" ")
-      end
     end
 
     local function AddPresetButton(desc, info)
@@ -775,9 +772,9 @@ function ReforgeLite:InitPresets()
           end
         end)
         button:SetTooltip(function(tooltip, element)
-          FormatWeightsTooltip(tooltip, element, info.value, true)
-          GameTooltip_AddNormalLine(tooltip, L["Click to load preset"])
-          GameTooltip_AddColoredLine(tooltip, L["Shift+Click to delete"], RED_FONT_COLOR)
+          FormatWeightsTooltip(tooltip, element, info.value)
+          tooltip:AddLine(" ")
+          GameTooltip_AddColoredLine(tooltip, L["Shift+Click to delete"], addonTable.COLORS.red)
         end)
       else
         local button = desc:CreateButton(info.text, function()

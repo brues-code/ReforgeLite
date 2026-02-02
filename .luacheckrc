@@ -106,7 +106,6 @@ read_globals = {
     "GameTooltip_AddNormalLine",
     "GameTooltip_AddColoredLine",
     "GameTooltip_AddBlankLineToTooltip",
-    "RED_FONT_COLOR",
     "WHITE_FONT_COLOR",
     "GOLD_FONT_COLOR",
     "INACTIVE_COLOR",
