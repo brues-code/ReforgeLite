@@ -1066,7 +1066,7 @@ function GUI:CreateTable (rows, cols, firstRow, firstColumn, gridColor, parent)
           end
           local currentMax = maxWidths[colIndex] or 0
           if foundWidth > currentMax then
-            maxWidths[colIndex] = ceil(foundWidth) + 10
+            maxWidths[colIndex] = ceil(foundWidth) + 4
           end
         end
       end

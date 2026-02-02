@@ -1667,8 +1667,8 @@ function ReforgeLite:UpdateMethodCategory()
     self.methodCategory:AddFrame (self.methodStats)
     self:SetAnchor (self.methodStats, "TOPLEFT", self.methodCategory, "BOTTOMLEFT", 0, -5)
     self.methodStats:SetRowHeight (ITEM_SIZE + 2)
-    self.methodStats:SetColumnWidth(60)
-    self.methodStats:EnableColumnAutoWidth(0)
+    self.methodStats:SetColumnWidth(46)
+    self.methodStats:EnableColumnAutoWidth(0, 1, 2)
 
     for i, v in ipairs (ITEM_STATS) do
       local cell = i - 1
