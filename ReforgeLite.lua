@@ -1307,10 +1307,10 @@ function ReforgeLite:CreateOptionList ()
   self:SetAnchor(self.buffsContextMenu, "LEFT", self.targetLevel, "RIGHT", 10, 0)
 
   local buffsContextValues = {
-    { key = 'spellHaste', text = addonTable.CreateIconMarkup(136092) .. L["Spell Haste"], selected = self.PlayerHasSpellHasteBuff },
-    { key = 'meleeHaste', text = addonTable.CreateIconMarkup(133076) .. L["Melee Haste"], selected = self.PlayerHasMeleeHasteBuff },
-    { key = 'mastery', text = addonTable.CreateIconMarkup(136046) .. STAT_MASTERY, selected = self.PlayerHasMasteryBuff },
-    { key = 'crit', text = addonTable.CreateIconMarkup(136112) .. " 5% " .. CRIT_ABBR, selected = self.PlayerHasCritBuff },
+    { key = 'spellHaste', text = addonTable.CreateIconMarkup(136092) .. L["5% Spell Haste"], selected = self.PlayerHasSpellHasteBuff },
+    { key = 'meleeHaste', text = addonTable.CreateIconMarkup(133076) .. L["10% Melee Haste"], selected = self.PlayerHasMeleeHasteBuff },
+    { key = 'mastery', text = ("%s+%s %s"):format(addonTable.CreateIconMarkup(136046), addonTable.MASTERY_BY_LEVEL[UnitLevel('player')], STAT_MASTERY), selected = self.PlayerHasMasteryBuff },
+    { key = 'crit', text = addonTable.CreateIconMarkup(136112) .. "5% " .. CRIT_ABBR, selected = self.PlayerHasCritBuff },
   }
 
   self.buffsContextMenu:SetupMenu(function(dropdown, rootDescription)
@@ -1321,9 +1321,7 @@ function ReforgeLite:CreateOptionList ()
     for _, box in ipairs(buffsContextValues) do
       local checkbox = rootDescription:CreateCheckbox(
         box.text,
-        function(value)
-          return self.pdb[value] or box.selected(self)
-        end,
+        function(value) return self.pdb[value] or box.selected(self) end,
         SetSelected,
         box.key
       )
