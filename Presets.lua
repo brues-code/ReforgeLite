@@ -43,12 +43,7 @@ local CRIT_BUFFS = {
 }
 
 local function CheckForPlayerAura(buffTable)
-  for _, v in ipairs(buffTable) do
-    if C_UnitAuras.GetPlayerAuraBySpellID(v) then
-      return true
-    end
-  end
-  return false
+  return ContainsIf(buffTable, C_UnitAuras.GetPlayerAuraBySpellID)
 end
 
 ---Checks if player has a spell haste buff active
