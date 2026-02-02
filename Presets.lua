@@ -701,10 +701,15 @@ function ReforgeLite:InitPresets()
 
     rootDescription:CreateDivider()
 
-    local function FormatWeightsTooltip(tooltip, element, weights, addBlank)
-      if not weights then return end
+    local function GetCapPresetName(presetValue)
+      local value = FindValueInTableIf(self.capPresets, function(preset) return preset.value == presetValue end)
+      return (value or {}).name
+    end
+
+    local function FormatWeightsTooltip(tooltip, element, preset, addBlank)
+      if not preset or not preset.weights then return end
       local statWeights = {}
-      for i, weight in ipairs(weights) do
+      for i, weight in ipairs(preset.weights) do
         if weight and weight > 0 then
           tinsert(statWeights, {stat = addonTable.itemStats[i].long, weight = weight, index = i})
         end
@@ -721,9 +726,33 @@ function ReforgeLite:InitPresets()
         for _, entry in ipairs(statWeights) do
           tooltip:AddDoubleLine(entry.stat, entry.weight, nil, nil, nil, rightR, rightG, rightB)
         end
-        if addBlank then
-          tooltip:AddLine(" ")
+      end
+      if preset.caps then
+        local rightR, rightG, rightB = addonTable.COLORS.white:GetRGB()
+        local methodNames = {
+          [addonTable.StatCapMethods.AtLeast] = L["At least"],
+          [addonTable.StatCapMethods.AtMost] = L["At most"],
+          [addonTable.StatCapMethods.Exactly] = L["Exactly"],
+        }
+        for i, cap in ipairs(preset.caps) do
+          if cap and cap.stat and cap.stat > 0 and cap.points and cap.points[1] then
+            local statName = addonTable.itemStats[cap.stat] and addonTable.itemStats[cap.stat].long or ""
+            local pt = cap.points[1]
+            local presetName = GetCapPresetName(pt.preset)
+            local methodName = methodNames[pt.method] or ""
+            local capText
+            if presetName and pt.preset ~= CAPS.ManualCap then
+              capText = ("%s %s"):format(methodName, presetName)
+            else
+              capText = ("%s %d"):format(methodName, pt.value or 0)
+            end
+            tooltip:AddLine(L["Cap %d - %s"]:format(i, statName))
+            tooltip:AddLine("  " .. capText, rightR, rightG, rightB)
+          end
         end
+      end
+      if addBlank then
+        tooltip:AddLine(" ")
       end
     end
 
@@ -747,7 +776,7 @@ function ReforgeLite:InitPresets()
           end
         end)
         button:SetTooltip(function(tooltip, element)
-          FormatWeightsTooltip(tooltip, element, info.value.weights, true)
+          FormatWeightsTooltip(tooltip, element, info.value, true)
           GameTooltip_AddNormalLine(tooltip, L["Click to load preset"])
           GameTooltip_AddColoredLine(tooltip, L["Shift+Click to delete"], RED_FONT_COLOR)
         end)
@@ -760,7 +789,7 @@ function ReforgeLite:InitPresets()
           self:SetStatWeights(info.value.weights, info.value.caps or {})
         end)
         button:SetTooltip(function(tooltip, element)
-          FormatWeightsTooltip(tooltip, element, info.value.weights)
+          FormatWeightsTooltip(tooltip, element, info.value)
         end)
       end
     end
