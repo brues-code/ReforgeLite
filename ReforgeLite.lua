@@ -1312,20 +1312,20 @@ function ReforgeLite:CreateOptionList ()
     { key = 'mastery', text = ("%s+%s %s"):format(addonTable.CreateIconMarkup(136046), addonTable.MASTERY_BY_LEVEL[UnitLevel('player')], STAT_MASTERY), selected = self.PlayerHasMasteryBuff },
     { key = 'crit', text = addonTable.CreateIconMarkup(136112) .. "5% " .. CRIT_ABBR, selected = self.PlayerHasCritBuff },
   }
+  local function SetSelected(box)
+    self.pdb[box.key] = not self.pdb[box.key]
+    self:QueueUpdate()
+  end
 
   self.buffsContextMenu:SetupMenu(function(dropdown, rootDescription)
-    local function SetSelected(value)
-      self.pdb[value] = not self.pdb[value]
-      self:QueueUpdate()
-    end
     for _, box in ipairs(buffsContextValues) do
       local checkbox = rootDescription:CreateCheckbox(
         box.text,
-        function(value) return self.pdb[value] or box.selected(self) end,
+        function(b) return self.pdb[b.key] or b.selected(self) end,
         SetSelected,
-        box.key
+        box
       )
-      checkbox.IsEnabled = function(chkbox) return not box.selected(self) end
+      checkbox.IsEnabled = function(chkbox) return not chkbox.data.selected(self) end
     end
   end)
 
