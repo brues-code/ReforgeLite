@@ -338,7 +338,7 @@ function GUI:CreateDropdown (parent, values, options)
       frame.selectedName = nil
       frame.selectedID = nil
       frame.selectedValue = nil
-      frame.menuItemDisabled = nil
+      frame.menuItemEnabled = nil
       frame.menuItemHidden = nil
       frame.values = nil
       if frame.Text then
@@ -351,7 +351,7 @@ function GUI:CreateDropdown (parent, values, options)
 
   sel.values = values
   sel.setter = options.setter
-  sel.menuItemDisabled = options.menuItemDisabled
+  sel.menuItemEnabled = options.menuItemEnabled
   sel.menuItemHidden = options.menuItemHidden
 
   -- Setup menu with MenuUtil (always needs to be called, even for recycled dropdowns)
@@ -366,24 +366,23 @@ function GUI:CreateDropdown (parent, values, options)
       if dropdown.menuItemHidden and dropdown.menuItemHidden(item) then
         -- Skip
       else
-        local isSelected = function() return dropdown.value == item.value end
-        local setSelected = function()
+        local isSelected = function(i) return dropdown.value == i.value end
+        local setSelected = function(i)
           local oldValue = dropdown.value
-          dropdown.value = item.value
-          dropdown.selectedValue = item.value
+          dropdown.value = i.value
+          dropdown.selectedValue = i.value
           if dropdown.Text then
-            dropdown.Text:SetText(item.name)
+            dropdown.Text:SetText(i.name)
           end
           if dropdown.setter then
-            dropdown.setter(dropdown, item.value, oldValue)
+            dropdown.setter(dropdown, i.value, oldValue)
           end
         end
-
-        local button = rootDescription:CreateRadio(item.name, isSelected, setSelected, item.value)
-
-        -- Handle disabled items
-        if dropdown.menuItemDisabled and dropdown.menuItemDisabled(item.value) then
-          button:SetEnabled(false)
+        local button = rootDescription:CreateRadio(item.name, isSelected, setSelected, item)
+        if dropdown.menuItemEnabled then
+          button.IsEnabled = function(btn)
+            return dropdown.menuItemEnabled(btn.data.value)
+          end
         end
       end
     end

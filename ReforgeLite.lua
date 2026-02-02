@@ -1377,8 +1377,9 @@ function ReforgeLite:CreateOptionList ()
         self.statCaps:ToggleStatDropdownToCorrectState()
       end,
       width = 125,
-      menuItemDisabled = function(val)
-        return val > 0 and self.statCaps[3-i] and self.statCaps[3-i].stat and self.statCaps[3-i].stat.value == val
+      menuItemEnabled = function(val)
+        local otherCap = self.statCaps[3-i]
+        return not (val > 0 and otherCap and otherCap.stat and otherCap.stat.value == val)
       end
     })
     self.statCaps[i].add = GUI:CreateImageButton (self.statCaps, 20, 20, "Interface\\Buttons\\UI-PlusButton-Up",
