@@ -714,8 +714,8 @@ function ReforgeLite:InitPresets()
           tinsert(statWeights, {stat = addonTable.itemStats[i].long, weight = weight, index = i})
         end
       end
-      if #statWeights > 0 then
-        local rightR, rightG, rightB = addonTable.COLORS.white:GetRGB()
+      local rightR, rightG, rightB = addonTable.COLORS.white:GetRGB()
+      if statWeights[1] then
         tooltip:AddLine(element.text, rightR, rightG, rightB)
         sort(statWeights, function(a, b)
           if a.weight == b.weight then
@@ -728,7 +728,6 @@ function ReforgeLite:InitPresets()
         end
       end
       if preset.caps then
-        local rightR, rightG, rightB = addonTable.COLORS.white:GetRGB()
         local methodNames = {
           [addonTable.StatCapMethods.AtLeast] = L["At least"],
           [addonTable.StatCapMethods.AtMost] = L["At most"],
