@@ -651,16 +651,14 @@ local function FormatNumber(num)
   return (num > 0 and "+" or "-") .. BreakUpLargeNumbers(abs(num))
 end
 
-local function SetTextDelta (text, value, cur, override)
+local function GetTextDelta (value, cur, override)
   override = override or (value - cur)
-  if override == 0 then
-    text:SetTextColor(addonTable.COLORS.grey:GetRGB())
+  if override < 0 then
+    return addonTable.COLORS.red
   elseif override > 0 then
-    text:SetTextColor(addonTable.COLORS.green:GetRGB())
-  else
-    text:SetTextColor(addonTable.COLORS.red:GetRGB())
+    return addonTable.COLORS.green
   end
-  text:SetText(FormatNumber(value - cur))
+  return addonTable.COLORS.grey
 end
 
 ------------------------------------------------------------------------
@@ -1676,8 +1674,7 @@ function ReforgeLite:UpdateMethodCategory()
       local cell = i - 1
       self.methodStats:SetCellText(cell, 0, v.long, "LEFT")
       self.methodStats:SetCellText(cell, 1, "0")
-      self.methodStats:SetCellText(cell, 2, "+0", nil, addonTable.COLORS.grey)
-      self.methodStats[i] = { delta = self.methodStats.cells[cell][2] }
+      self.methodStats:SetCellText(cell, 2, "0", nil, addonTable.COLORS.grey)
     end
 
     self.expertiseToHitHelpButton = GUI:CreateHelpButton(self.methodStats, L["Your Expertise rating is being converted to spell hit.\n\nIn Mists of Pandaria, casters benefit from Expertise due to it automatically converting to Hit at a 1:1 ratio.\n\nThe Hit value shown above includes this converted Expertise rating.\n\nNote: The character sheet is bugged and doesn't show Expertise converted to spell hit, but the conversion works correctly in combat."], { scale = 0.45 })
@@ -1721,7 +1718,7 @@ function ReforgeLite:RefreshMethodStats()
         if self:GetStatScore (statId, mvalue) == self:GetStatScore (statId, value) then
           override = 0
         end
-        SetTextDelta (self.methodStats[statId].delta, mvalue, value, override)
+        self.methodStats:SetCellText(cell, 2, FormatNumber(mvalue - value), nil, GetTextDelta(mvalue, value, override))
         local expanded = mvalue > 0 and (statId ~= statIds.SPIRIT or showSpirit)
         self.methodStats:SetRowExpanded(cell, expanded)
         anyExpanded = anyExpanded or expanded
