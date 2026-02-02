@@ -71,6 +71,7 @@ local DefaultDB = {
     meleeHaste = true,
     spellHaste = true,
     mastery = false,
+    crit = false,
     weights = {0, 0, 0, 0, 0, 0, 0, 0},
     caps = {
       {
@@ -1306,22 +1307,27 @@ function ReforgeLite:CreateOptionList ()
   self:SetAnchor(self.buffsContextMenu, "LEFT", self.targetLevel, "RIGHT", 10, 0)
 
   local buffsContextValues = {
-    spellHaste = { text = addonTable.CreateIconMarkup(136092) .. L["Spell Haste"], selected = self.PlayerHasSpellHasteBuff },
-    meleeHaste = { text = addonTable.CreateIconMarkup(133076) .. L["Melee Haste"], selected = self.PlayerHasMeleeHasteBuff },
-    mastery = { text = addonTable.CreateIconMarkup(136046) .. STAT_MASTERY, selected = self.PlayerHasMasteryBuff },
+    { key = 'spellHaste', text = addonTable.CreateIconMarkup(136092) .. L["Spell Haste"], selected = self.PlayerHasSpellHasteBuff },
+    { key = 'meleeHaste', text = addonTable.CreateIconMarkup(133076) .. L["Melee Haste"], selected = self.PlayerHasMeleeHasteBuff },
+    { key = 'mastery', text = addonTable.CreateIconMarkup(136046) .. STAT_MASTERY, selected = self.PlayerHasMasteryBuff },
+    { key = 'crit', text = addonTable.CreateIconMarkup(136112) .. " 5% " .. CRIT_ABBR, selected = self.PlayerHasCritBuff },
   }
 
   self.buffsContextMenu:SetupMenu(function(dropdown, rootDescription)
-    local function IsSelected(value)
-        return self.pdb[value] or buffsContextValues[value].selected(self)
-    end
     local function SetSelected(value)
-        self.pdb[value] = not self.pdb[value]
-        self:QueueUpdate()
+      self.pdb[value] = not self.pdb[value]
+      self:QueueUpdate()
     end
-    for key, box in pairs(buffsContextValues) do
-        local checkbox = rootDescription:CreateCheckbox(box.text, IsSelected, SetSelected, key)
-        checkbox.IsEnabled = function(chkbox) return not buffsContextValues[chkbox.data].selected(self) end
+    for _, box in ipairs(buffsContextValues) do
+      local checkbox = rootDescription:CreateCheckbox(
+        box.text,
+        function(value)
+          return self.pdb[value] or box.selected(self)
+        end,
+        SetSelected,
+        box.key
+      )
+      checkbox.IsEnabled = function(chkbox) return not box.selected(self) end
     end
   end)
 
@@ -1351,7 +1357,7 @@ function ReforgeLite:CreateOptionList ()
       caps[i].stat:SetEnabled(self.pdb.caps[i-1].stat ~= 0)
     end
     if self.fastModeButton then
-      self.fastModeButton:SetShown(self.pdb.caps[#self.pdb.caps].stat ~= 0)  
+      self.fastModeButton:SetShown(self.pdb.caps[#self.pdb.caps].stat ~= 0)
     end
   end
   for i = 1, 2 do

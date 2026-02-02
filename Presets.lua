@@ -12,58 +12,67 @@ local StatHaste = addonTable.statIds.HASTE
 local StatExp = addonTable.statIds.EXP
 
 local SPELL_HASTE_BUFFS = {
-  24907,  -- Moonkin Aura
-  49868,  -- Mind Quickening
   51470,  -- Elemental Oath
   135678, -- Energizing Spores
+  49868,  -- Mind Quickening
+  24907,  -- Moonkin Aura
 }
 
 local MELEE_HASTE_BUFFS = {
-  55610,  -- Unholy Aura
   128432, -- Cackling Howl
   128433, -- Serpent's Swiftness
   113742, -- Swiftblade's Cunning
+  55610,  -- Unholy Aura
   30809,  -- Unleashed Rage
 }
 
 local MASTERY_BUFFS = {
-  93435,  -- Roar of Courage
-  128997, -- Spirit Beast Blessing
   19740,  -- Blessing of Might
   116956, -- Grace of Air
+  93435,  -- Roar of Courage
+  128997, -- Spirit Beast Blessing
 }
 
----Checks if player has a spell haste buff active
----@return boolean hasSpellHaste True if any spell haste buff is active
-function ReforgeLite:PlayerHasSpellHasteBuff()
-  for _, v in ipairs(SPELL_HASTE_BUFFS) do
+local CRIT_BUFFS = {
+  1459,   -- Arcane Brilliance
+  24604,  -- Furious Howl
+  17007,  -- Leader of the Pack
+  116781, -- Legacy of the White Tiger
+  126309, -- Still Water
+  90309,  -- Terrifying Roar
+}
+
+local function CheckForPlayerAura(buffTable)
+  for _, v in ipairs(buffTable) do
     if C_UnitAuras.GetPlayerAuraBySpellID(v) then
       return true
     end
   end
   return false
+end
+
+---Checks if player has a spell haste buff active
+---@return boolean hasSpellHaste True if any spell haste buff is active
+function ReforgeLite:PlayerHasSpellHasteBuff()
+  return CheckForPlayerAura(SPELL_HASTE_BUFFS)
 end
 
 ---Checks if player has a melee haste buff active
 ---@return boolean hasMeleeHaste True if any melee haste buff is active
 function ReforgeLite:PlayerHasMeleeHasteBuff()
-  for _, v in ipairs(MELEE_HASTE_BUFFS) do
-    if C_UnitAuras.GetPlayerAuraBySpellID(v) then
-      return true
-    end
-  end
-  return false
+  return CheckForPlayerAura(MELEE_HASTE_BUFFS)
 end
 
 ---Checks if player has a mastery buff active
 ---@return boolean hasMastery True if any mastery buff is active
 function ReforgeLite:PlayerHasMasteryBuff()
-  for _, v in ipairs(MASTERY_BUFFS) do
-    if C_UnitAuras.GetPlayerAuraBySpellID(v) then
-      return true
-    end
-  end
-  return false
+  return CheckForPlayerAura(MASTERY_BUFFS)
+end
+
+---Checks if player has a crit buff active
+---@return boolean hasCrit True if any crit buff is active
+function ReforgeLite:PlayerHasCritBuff()
+  return CheckForPlayerAura(CRIT_BUFFS)
 end
 
 ---Gets the rating required per 1% of a stat at a given level
