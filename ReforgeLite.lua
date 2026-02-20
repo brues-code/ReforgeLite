@@ -538,10 +538,9 @@ function ReforgeLite:CreateCategory (name)
   c:ClearAllPoints ()
   c:SetSize(16,16)
   c.expanded = self.pdb.categoryStates[name] ~= 1
-  c.name = c:CreateFontString (nil, "OVERLAY", "GameFontNormal")
+  c.name = c:CreateFontString (nil, "OVERLAY", "GameFontHighlight")
   c.catname = c.name
   c.name:SetPoint ("TOPLEFT", c, "TOPLEFT", 18, -1)
-  c.name:SetTextColor(addonTable.COLORS.white:GetRGB())
   c.name:SetText (name)
 
   c.button = CreateFrame ("Button", nil, c)
@@ -779,9 +778,8 @@ function ReforgeLite:CreateFrame()
   self.titleIcon.texture:SetAllPoints(self.titleIcon)
   self.titleIcon.texture:SetTexture([[Interface\Reforging\Reforge-Portrait]])
 
-  self.title = self:CreateFontString (nil, "OVERLAY", "GameFontNormal")
+  self.title = self:CreateFontString (nil, "OVERLAY", "GameFontHighlight")
   self.title:SetText (C_AddOns.GetAddOnTitle(addonName))
-  self.title:SetTextColor (addonTable.COLORS.white:GetRGB())
   self.title:SetPoint ("BOTTOMLEFT", self.titleIcon, "BOTTOMRIGHT", 2, 1)
 
   self.versionInfo = self:CreateFontString (nil, "OVERLAY", "GameFontNormal")
@@ -1939,8 +1937,7 @@ function ReforgeLite:CreateMethodWindow()
   tinsert(UISpecialFrames, self.methodWindow:GetName()) -- allow closing with escape
   tinsert(RFL_FRAMES, self.methodWindow)
 
-  self.methodWindow.title = self.methodWindow:CreateFontString (nil, "OVERLAY", "GameFontNormal")
-  self.methodWindow.title:SetTextColor(addonTable.COLORS.white:GetRGB())
+  self.methodWindow.title = self.methodWindow:CreateFontString (nil, "OVERLAY", "GameFontHighlight")
   self.methodWindow.title.RefreshText = function(frame)
     frame:SetFormattedText(L["Apply %s Output"], self.pdb.methodOrigin)
   end
@@ -2017,9 +2014,8 @@ function ReforgeLite:CreateMethodWindow()
     self.methodWindow.items[i].quality:SetSize(44,44)
     self.methodWindow.items[i].quality:SetPoint("CENTER", self.methodWindow.items[i])
 
-    self.methodWindow.items[i].reforge = self.methodWindow.itemTable:CreateFontString (nil, "OVERLAY", "GameFontNormal")
+    self.methodWindow.items[i].reforge = self.methodWindow.itemTable:CreateFontString (nil, "OVERLAY", "GameFontHighlight")
     self.methodWindow.itemTable:SetCell (i, 3, self.methodWindow.items[i].reforge, "LEFT")
-    self.methodWindow.items[i].reforge:SetTextColor(addonTable.COLORS.white:GetRGB())
     self.methodWindow.items[i].reforge:SetText ("")
 
     self.methodWindow.items[i].check = GUI:CreateCheckButton (self.methodWindow.itemTable, "", false,
