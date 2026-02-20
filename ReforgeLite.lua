@@ -383,7 +383,7 @@ function addonTable.GetItemStatsFromTooltip(itemInfo)
   local foundStats = 0
 
   for _, region in ipairs({scanTooltip:GetRegions()}) do
-    if foundStats == (itemInfo.reforge ~= nil and 3 or 2) then
+    if foundStats == (itemInfo.reforge ~= nil and 4 or 3) then
       break
     end
     if region.GetText then
