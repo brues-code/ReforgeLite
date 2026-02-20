@@ -376,6 +376,7 @@ function addonTable.GetItemStatsFromTooltip(itemInfo)
     local srcId, dstId = unpack(reforgeTable[itemInfo.reforge])
     srcName, destName = ITEM_STATS[srcId].name, ITEM_STATS[dstId].name
   end
+  local baseItemStats = GetItemStats(itemInfo.link)
 
   local stats = {}
   scanTooltip:SetOwner(UIParent, "ANCHOR_NONE")
@@ -387,7 +388,7 @@ function addonTable.GetItemStatsFromTooltip(itemInfo)
       if text and text ~= "" then
         local cleanText = strtrim((text:gsub("%b()", "")))
         for _, statInfo in ipairs(ITEM_STATS) do
-          if not stats[statInfo.name] then
+          if not stats[statInfo.name] and (baseItemStats[statInfo.name] or statInfo.name == destName) then
             local value = TableUtil.ExecuteUntil(statInfo:getTooltipPatterns(), function(pattern) return cleanText:match(pattern) end)
             if value then
               stats[statInfo.name] = tonumber((value:gsub("[^%d]", "")))
