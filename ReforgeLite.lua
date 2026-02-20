@@ -1,6 +1,5 @@
 ---@type string, AddonTable
 local addonName, addonTable = ...
-local addonTitle = C_AddOns.GetAddOnMetadata(addonName, "title")
 
 ---@type ReforgeLite
 local ReforgeLite = CreateFrame("Frame", addonName, UIParent, "BackdropTemplate")
@@ -780,11 +779,18 @@ function ReforgeLite:CreateFrame()
   self.titleIcon.texture:SetAllPoints(self.titleIcon)
   self.titleIcon.texture:SetTexture([[Interface\Reforging\Reforge-Portrait]])
 
-
   self.title = self:CreateFontString (nil, "OVERLAY", "GameFontNormal")
-  self.title:SetText (addonTitle)
+  self.title:SetText (C_AddOns.GetAddOnTitle(addonName))
   self.title:SetTextColor (addonTable.COLORS.white:GetRGB())
   self.title:SetPoint ("BOTTOMLEFT", self.titleIcon, "BOTTOMRIGHT", 2, 1)
+
+  self.versionInfo = self:CreateFontString (nil, "OVERLAY", "GameFontNormal")
+  local addonVersion = C_AddOns.GetAddOnMetadata(addonName, 'Version')
+  if addonVersion == "@project-version@" then
+      addonVersion = "Dev"
+  end
+  self.versionInfo:SetText (addonVersion)
+  self.versionInfo:SetPoint ("BOTTOMLEFT", self.title, "BOTTOMRIGHT", 2, 0)
 
   self.close = CreateFrame ("Button", nil, self, "UIPanelCloseButtonNoScripts")
   self.close:SetSize(28, 28)
