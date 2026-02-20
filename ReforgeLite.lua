@@ -400,7 +400,9 @@ function addonTable.GetItemStatsFromTooltip(itemInfo)
   end
 
   if stats[srcName] and stats[destName] then
-    stats[srcName] = stats[srcName] + stats[destName]
+    if floor(stats[srcName] * addonTable.REFORGE_COEFF) ~= stats[destName] then
+      stats[srcName] = stats[srcName] + stats[destName]
+    end
     stats[destName] = nil
   end
 
