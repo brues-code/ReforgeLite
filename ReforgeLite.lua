@@ -1440,7 +1440,7 @@ function ReforgeLite:CreateOptionList ()
         addonTable.pauseRoutine = 'pause'
         btn:RenderText(CANCEL)
         self.computeButton:RenderText(CONTINUE)
-        addonTable.GUI:UnlockFrame(self.computeButton)
+        GUI:UnlockFrame(self.computeButton)
       end
     end,
     {
@@ -1525,7 +1525,7 @@ function ReforgeLite:FillSettings()
   self.settings,
   L["Accuracy"],
   self.db.accuracy,
-  addonTable.MAX_SPEED, 
+  addonTable.MAX_SPEED,
     function(slider)
       self.db.accuracy = slider:GetValue()
     end
