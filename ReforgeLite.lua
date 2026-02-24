@@ -783,11 +783,7 @@ function ReforgeLite:CreateFrame()
   self.title:SetPoint ("BOTTOMLEFT", self.titleIcon, "BOTTOMRIGHT", 2, 1)
 
   self.versionInfo = self:CreateFontString (nil, "OVERLAY", "GameFontNormal")
-  local addonVersion = C_AddOns.GetAddOnMetadata(addonName, 'Version')
-  if addonVersion == "@project-version@" then
-      addonVersion = "Dev"
-  end
-  self.versionInfo:SetText (addonVersion)
+  self.versionInfo:SetText (addonTable.isDev and "Dev" or C_AddOns.GetAddOnMetadata(addonName, 'Version'))
   self.versionInfo:SetPoint ("BOTTOMLEFT", self.title, "BOTTOMRIGHT", 2, 0)
 
   self.close = CreateFrame ("Button", nil, self, "UIPanelCloseButtonNoScripts")
