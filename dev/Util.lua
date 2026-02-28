@@ -74,3 +74,7 @@ EventRegistry:RegisterFrameEventAndCallback("FORGE_MASTER_CLOSED", function()
     playerMoney = nil
   end
 end)
+
+EventUtil.ContinueOnAddOnLoaded(addonName, function()
+  addonTable.callbacks:RegisterCallback("ToggleDebug", function() ReforgeLite:InitDynamicPresets() end)
+end)
