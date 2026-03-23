@@ -380,8 +380,8 @@ function addonTable.GetItemStatsFromTooltip(itemInfo)
   local stats = {}
   if not scanTooltip then
     scanTooltip = CreateFrame("GameTooltip", addonName.."ScanTooltip", nil, "GameTooltipTemplate")
+    scanTooltip:SetOwner(ReforgeLite, "ANCHOR_NONE")
   end
-  scanTooltip:SetOwner(ReforgeLite, "ANCHOR_NONE")
   scanTooltip:SetInventoryItem("player", itemInfo.slotId)
 
   for _, region in ipairs({scanTooltip:GetRegions()}) do
