@@ -344,7 +344,7 @@ function ReforgeLite:GetReforgeTableIndex(src, dst)
 end
 
 
-local scanTooltip = CreateFrame("GameTooltip", "ReforgeLiteScanTooltip", nil, "GameTooltipTemplate")
+local scanTooltip
 local tooltipStatsCache = setmetatable({}, {
   __index = function(t, k)
     rawset(t, k, {})
@@ -378,7 +378,10 @@ function addonTable.GetItemStatsFromTooltip(itemInfo)
   local baseItemStats = GetItemStats(itemInfo.link)
 
   local stats = {}
-  scanTooltip:SetOwner(UIParent, "ANCHOR_NONE")
+  if not scanTooltip then
+    scanTooltip = CreateFrame("GameTooltip", addonName.."ScanTooltip", nil, "GameTooltipTemplate")
+  end
+  scanTooltip:SetOwner(ReforgeLite, "ANCHOR_NONE")
   scanTooltip:SetInventoryItem("player", itemInfo.slotId)
 
   for _, region in ipairs({scanTooltip:GetRegions()}) do
