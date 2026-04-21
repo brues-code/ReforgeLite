@@ -1979,14 +1979,15 @@ function ReforgeLite:CreateMethodWindow()
 
   self.methodWindow.items = {}
   for i, v in ipairs (ITEM_SLOTS) do
-    self.methodWindow.items[i] = CreateFrame ("Frame", nil, self.methodWindow.itemTable)
-    self.methodWindow.items[i].slot = v
-    self.methodWindow.items[i]:ClearAllPoints ()
-    self.methodWindow.items[i]:SetSize(ITEM_SIZE, ITEM_SIZE)
-    self.methodWindow.itemTable:SetCell (i, 2, self.methodWindow.items[i])
-    self.methodWindow.items[i]:EnableMouse (true)
-    self.methodWindow.items[i]:RegisterForDrag("LeftButton")
-    self.methodWindow.items[i]:SetScript ("OnEnter", function (itemSlot)
+    local methodItem = CreateFrame ("Frame", nil, self.methodWindow.itemTable)
+    self.methodWindow.items[i] = methodItem
+    methodItem.slot = v
+    methodItem:ClearAllPoints ()
+    methodItem:SetSize(ITEM_SIZE, ITEM_SIZE)
+    self.methodWindow.itemTable:SetCell (i, 2, methodItem)
+    methodItem:EnableMouse (true)
+    methodItem:RegisterForDrag("LeftButton")
+    methodItem:SetScript ("OnEnter", function (itemSlot)
       GameTooltip:SetOwner(itemSlot, "ANCHOR_LEFT")
       if itemSlot.item then
         GameTooltip:SetInventoryItem("player", itemSlot.slotId)
@@ -1995,31 +1996,31 @@ function ReforgeLite:CreateMethodWindow()
       end
       GameTooltip:Show()
     end)
-    self.methodWindow.items[i]:SetScript ("OnLeave", GameTooltip_Hide)
-    self.methodWindow.items[i]:SetScript ("OnDragStart", function (itemSlot)
+    methodItem:SetScript ("OnLeave", GameTooltip_Hide)
+    methodItem:SetScript ("OnDragStart", function (itemSlot)
       if itemSlot.item and ReforgingFrameIsVisible() then
         PickupInventoryItem(itemSlot.slotId)
       end
     end)
-    self.methodWindow.items[i].slotId, self.methodWindow.items[i].slotTexture = GetInventorySlotInfo(v)
-    self.methodWindow.items[i].texture = self.methodWindow.items[i]:CreateTexture (nil, "OVERLAY")
-    self.methodWindow.items[i].texture:SetAllPoints (self.methodWindow.items[i])
-    self.methodWindow.items[i].texture:SetTexture (self.methodWindow.items[i].slotTexture)
+    methodItem.slotId, methodItem.slotTexture = GetInventorySlotInfo(v)
+    methodItem.texture = methodItem:CreateTexture (nil, "OVERLAY")
+    methodItem.texture:SetAllPoints (methodItem)
+    methodItem.texture:SetTexture (methodItem.slotTexture)
 
-    self.methodWindow.items[i].quality = self.methodWindow.items[i]:CreateTexture(nil, "OVERLAY")
-    self.methodWindow.items[i].quality:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    self.methodWindow.items[i].quality:SetBlendMode("ADD")
-    self.methodWindow.items[i].quality:SetAlpha(0.75)
-    self.methodWindow.items[i].quality:SetSize(44,44)
-    self.methodWindow.items[i].quality:SetPoint("CENTER", self.methodWindow.items[i])
+    methodItem.quality = methodItem:CreateTexture(nil, "OVERLAY")
+    methodItem.quality:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+    methodItem.quality:SetBlendMode("ADD")
+    methodItem.quality:SetAlpha(0.75)
+    methodItem.quality:SetSize(44,44)
+    methodItem.quality:SetPoint("CENTER", methodItem)
 
-    self.methodWindow.items[i].reforge = self.methodWindow.itemTable:CreateFontString (nil, "OVERLAY", "GameFontHighlight")
-    self.methodWindow.itemTable:SetCell (i, 3, self.methodWindow.items[i].reforge, "LEFT")
-    self.methodWindow.items[i].reforge:SetText ("")
+    methodItem.reforge = self.methodWindow.itemTable:CreateFontString (nil, "OVERLAY", "GameFontHighlight")
+    self.methodWindow.itemTable:SetCell (i, 3, methodItem.reforge, "LEFT")
+    methodItem.reforge:SetText ("")
 
-    self.methodWindow.items[i].check = GUI:CreateCheckButton (self.methodWindow.itemTable, "", false,
+    methodItem.check = GUI:CreateCheckButton (self.methodWindow.itemTable, "", false,
       function (val) self.methodOverride[i] = (val and 1 or -1) self:UpdateMethodChecks () end)
-    self.methodWindow.itemTable:SetCell (i, 1, self.methodWindow.items[i].check)
+    self.methodWindow.itemTable:SetCell (i, 1, methodItem.check)
   end
 
   self.methodWindow.reforge = GUI:CreatePanelButton(
@@ -2246,7 +2247,7 @@ function ReforgeLite:HookTooltipScripts()
     "ItemRefShoppingTooltip1",
     "ItemRefShoppingTooltip2",
   }
-  for _, tooltipName in ipairs(tooltips) do
+  for _, tooltipName in pairs(tooltips) do
     local tooltip = _G[tooltipName]
     if tooltip then
       tooltip:HookScript("OnTooltipSetItem", HandleTooltipUpdate)
@@ -2381,7 +2382,7 @@ function ReforgeLite:ADDON_LOADED (addon)
   self:SetScript("OnShow", self.OnShow)
   self:SetScript("OnHide", self.OnHide)
 
-  for k, v in ipairs({ addonName, "reforge", REFORGE:lower(), "rfl" }) do
+  for k, v in pairs({ addonName, "reforge", REFORGE:lower(), "rfl" }) do
     _G["SLASH_"..addonName:upper()..k] = "/" .. v
   end
   SlashCmdList[addonName:upper()] = function(...) self:OnCommand(...) end
