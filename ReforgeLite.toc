@@ -18,6 +18,7 @@
 ## Category-ruRU: Экипировка
 ## Category-zhCN: 装备
 ## Category-zhTW: 裝備
+## IconTexture: 459028
 
 #@no-lib-strip@
 embeds.xml
