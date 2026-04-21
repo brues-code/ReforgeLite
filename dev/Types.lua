@@ -256,7 +256,7 @@
 ---@field ComputeReforge fun(self: ReforgeLite)
 ---@field ResumeCompute fun(self: ReforgeLite)
 ---@field ResumeComputeNextFrame fun(self: ReforgeLite)
----@field RunYieldCheck fun(self: ReforgeLite, maxLoops: number)
+---@field RunYieldCheck fun(self: ReforgeLite)
 ---@field CreateRoutine fun(self: ReforgeLite, func: string)
 ---@field StartAlgorithmComparison fun(self: ReforgeLite)
 ---@field StartCompute fun(self: ReforgeLite)
