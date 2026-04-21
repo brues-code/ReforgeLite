@@ -441,7 +441,9 @@ function ReforgeLite:ComputeReforgeCore(reforgeOptions)
     end
 
     for k, score in pairs(scores) do
-      self:RunYieldCheck()
+      if i > 9 then
+        self:RunYieldCheck()
+      end
       local s1   = k % TABLE_SIZE
       local s2   = floor(k / TABLE_SIZE)
       local kd1  = d1a[k]
@@ -581,8 +583,7 @@ end
 local NORMAL_STATUS_CODES = { suspended = true, running = true }
 local routine
 
-local YIELD_BUDGET_MS = 10  -- max ms of Lua execution per frame before yielding
-local YIELD_CHECK_INTERVAL = 100  -- check the clock every N iterations (cheap counter gate)
+local YIELD_BUDGET_MS = 20  -- max ms of Lua execution per frame before yielding
 local frameStartTime = 0
 
 -- OnUpdate frame used to resume the coroutine. Each OnUpdate fires as a fresh C->Lua call,
