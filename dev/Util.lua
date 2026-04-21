@@ -42,7 +42,7 @@ end
 function ReforgeLite:PreviewColors()
   for _, dbColor in ipairs(C_UIColor.GetColors()) do
     local color = _G[dbColor.baseTag]
-    print(color:WrapTextInColorCode((", "):join(dbColor.baseTag, color:GetRGB())))
+    print(color:WrapTextInColorCode((", "):join(dbColor.baseTag, color:GetRGBA())))
   end
 end
 
