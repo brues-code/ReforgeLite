@@ -780,7 +780,7 @@ function ReforgeLite:CreateFrame()
 
   self.titleIcon.texture = self.titleIcon:CreateTexture("ARTWORK")
   self.titleIcon.texture:SetAllPoints(self.titleIcon)
-  self.titleIcon.texture:SetTexture([[Interface\Reforging\Reforge-Portrait]])
+  self.titleIcon.texture:SetTexture(459028) -- [[Interface\Reforging\Reforge-Portrait]]
 
   self.title = self:CreateFontString (nil, "OVERLAY", "GameFontHighlight")
   self.title:SetText (C_AddOns.GetAddOnTitle(addonName))
