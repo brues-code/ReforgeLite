@@ -613,22 +613,24 @@ function GUI:CreateSlider(parent, text, value, max, onChange, width, height)
   return slider
 end
 
-GUI.itemIconPool = MakeRecyclablePool("Frame", UIParent, nil,
+GUI.itemIconPool = MakeRecyclablePool("Button", UIParent, "ItemButtonTemplate",
   function(_, frame)
     frame:Hide()
     frame:ClearAllPoints()
     frame:SetParent(UIParent)
-    if frame.texture then frame.texture:SetTexture(nil) end
+    frame.icon:SetTexture(nil)
+    frame.IconBorder:Hide()
+    frame.searchOverlay:Hide()
     if frame.lockOverlay then frame.lockOverlay:Hide() end
     frame.itemInfo = {}
   end
 )
 
----Creates an item icon frame for the item table
+---Creates an item icon button for the item table
 ---@param parent Frame Parent frame
 ---@param slot string Inventory slot name (e.g. "HeadSlot")
 ---@param options? table Options: size (number), onMouseDown (function)
----@return Frame frame The item icon frame
+---@return Button frame The item icon button
 function GUI:CreateItemIcon(parent, slot, options)
   options = options or {}
   local frame, isNew = self.itemIconPool:Acquire()
@@ -636,24 +638,15 @@ function GUI:CreateItemIcon(parent, slot, options)
   if isNew then
     Mixin(frame, WidgetLockMixin)
 
-    frame.texture = frame:CreateTexture(nil, "ARTWORK")
-    frame.texture:SetAllPoints(frame)
-    frame.texture:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    frame:GetNormalTexture():SetTexture(nil)
+    frame.IconBorder:SetAllPoints(frame)
 
     frame.lockOverlay = frame:CreateTexture(nil, "OVERLAY")
     frame.lockOverlay:SetAllPoints(frame)
     frame.lockOverlay:SetTexture("Interface\\PaperDollInfoFrame\\UI-GearManager-LeaveItem-Transparent")
 
-    frame.quality = frame:CreateTexture(nil, "OVERLAY")
-    frame.quality:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    frame.quality:SetBlendMode("ADD")
-    frame.quality:SetAlpha(0.75)
-    frame.quality:SetSize(44, 44)
-    frame.quality:SetPoint("CENTER", frame)
-
     frame.itemInfo = {}
     frame.stats = {}
-    frame:EnableMouse(true)
     frame:SetScript("OnLeave", GameTooltip_Hide)
     frame:SetScript("OnEnter", function(f)
       GameTooltip:SetOwner(f, "ANCHOR_LEFT")
@@ -672,7 +665,7 @@ function GUI:CreateItemIcon(parent, slot, options)
   frame.onMouseDown = options.onMouseDown
   frame.slot = slot
   frame.slotId, frame.slotTexture = GetInventorySlotInfo(slot)
-  frame.texture:SetTexture(frame.slotTexture)
+  frame.icon:SetTexture(frame.slotTexture)
   frame.lockOverlay:Hide()
   local size = options.size or 24
   frame:SetSize(size, size)

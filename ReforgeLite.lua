@@ -1717,8 +1717,7 @@ function ReforgeLite:UpdateItems()
     local stats, reforgeSrc, reforgeDst
     if item:IsItemEmpty() then
       wipe(v.itemInfo)
-      v.texture:SetTexture(v.slotTexture)
-      v.quality:SetVertexColor(addonTable.COLORS.white:GetRGB())
+      v.icon:SetTexture(v.slotTexture)
     else
       v.itemInfo = {
         link = item:GetItemLink(),
@@ -1730,8 +1729,8 @@ function ReforgeLite:UpdateItems()
         slotId = v.slotId,
       }
       v.itemInfo.originalStats = GetItemStats(v.itemInfo)
-      v.texture:SetTexture(item:GetItemIcon())
-      v.quality:SetVertexColor(item:GetItemQualityColor().color:GetRGB())
+      v.icon:SetTexture(item:GetItemIcon())
+      v.IconBorder:SetVertexColor(item:GetItemQualityColor().color:GetRGB())
       stats = CopyTable(v.itemInfo.originalStats)
       if v.itemInfo.reforge then
         local srcId, dstId = unpack(reforgeTable[v.itemInfo.reforge])
@@ -1741,7 +1740,7 @@ function ReforgeLite:UpdateItems()
         stats[reforgeDst] = (stats[reforgeDst] or 0) + amount
       end
     end
-    v.quality:SetShown(not item:IsItemEmpty())
+    v.IconBorder:SetShown(not item:IsItemEmpty())
     v.lockOverlay:SetShown(self.pdb.itemsLocked[v.itemInfo.itemGUID])
 
     for j, s in ipairs (ITEM_STATS) do
