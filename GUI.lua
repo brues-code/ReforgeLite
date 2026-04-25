@@ -108,9 +108,9 @@ end
 
 local WidgetLockMixin = {}
 function WidgetLockMixin:LockWidget()
-  if self:IsEnabled() and not self.preventLock then
+  if not self.preventLock and (not self.IsEnabled or self:IsEnabled()) then
     self.locked = true
-    self:Disable()
+    if self.Disable then self:Disable() end
     if self:IsMouseEnabled() then
       self:EnableMouse(false)
       self.mouseDisabled = true
@@ -127,7 +127,7 @@ end
 
 function WidgetLockMixin:UnlockWidget()
   if self.locked then
-    self:Enable()
+    if self.Enable then self:Enable() end
     self.locked = nil
     if self.mouseDisabled then
       self:EnableMouse(true)
@@ -142,7 +142,6 @@ function WidgetLockMixin:UnlockWidget()
     end
   end
 end
-
 
 local function MakeRecyclablePool(...)
   local pool = CreateUnsecuredFramePool(...)
@@ -464,6 +463,16 @@ function GUI:CreatePanelButton(parent, text, handler, opts)
   return btn
 end
 
+GUI.colorPickerPool = MakeRecyclablePool("Frame", UIParent, nil,
+  function(_, box)
+    box:Hide()
+    box:ClearAllPoints()
+    box:SetScript("OnMouseDown", nil)
+    if box.glow then box.glow:Hide() end
+    box:SetParent(UIParent)
+  end
+)
+
 ---Creates a color picker button
 ---@param parent Frame Parent frame
 ---@param width number Width in pixels
@@ -471,23 +480,26 @@ end
 ---@param color table RGB color array {r, g, b}
 ---@param handler? function Callback when color changes
 ---@return Frame box The color picker frame
-function GUI:CreateColorPicker (parent, width, height, color, handler)
-  local box = CreateFrame ("Frame", nil, parent)
+function GUI:CreateColorPicker(parent, width, height, color, handler)
+  local box, isNew = self.colorPickerPool:Acquire()
+  if isNew then
+    box:EnableMouse(true)
+    box.texture = box:CreateTexture(nil, "OVERLAY")
+    box.texture:SetAllPoints()
+    box.glow = box:CreateTexture(nil, "BACKGROUND")
+    box.glow:SetPoint("TOPLEFT", -2, 2)
+    box.glow:SetPoint("BOTTOMRIGHT", 2, -2)
+    box.glow:SetColorTexture(addonTable.COLORS.grey:GetRGB())
+    box.glow:Hide()
+    box:SetScript("OnEnter", function(b) b.glow:Show() end)
+    box:SetScript("OnLeave", function(b) b.glow:Hide() end)
+    Mixin(box, WidgetLockMixin)
+  end
+  box:SetParent(parent)
+  box:Show()
   box:SetSize(width, height)
-  box:EnableMouse (true)
-  box.texture = box:CreateTexture (nil, "OVERLAY")
-  box.texture:SetAllPoints ()
-  box.texture:SetColorTexture (unpack (color))
-  box.glow = box:CreateTexture (nil, "BACKGROUND")
-  box.glow:SetPoint ("TOPLEFT", -2, 2)
-  box.glow:SetPoint ("BOTTOMRIGHT", 2, -2)
-
-  box.glow:SetColorTexture (addonTable.COLORS.grey:GetRGB())
-  box.glow:Hide ()
-
-  box:SetScript ("OnEnter", function (b) b.glow:Show() end)
-  box:SetScript ("OnLeave", function (b) b.glow:Hide() end)
-  box:SetScript ("OnMouseDown", function (b)
+  box.texture:SetColorTexture(unpack(color))
+  box:SetScript("OnMouseDown", function(b)
     local function applyColor(func)
       return function()
         local prevR, prevG, prevB = func(ColorPickerFrame)
@@ -504,7 +516,6 @@ function GUI:CreateColorPicker (parent, width, height, color, handler)
       cancelFunc = applyColor(ColorPickerFrame.GetPreviousValues),
     })
   end)
-
   return box
 end
 
