@@ -1951,40 +1951,16 @@ function ReforgeLite:CreateMethodWindow()
 
   self.methodWindow.items = {}
   for i, v in ipairs (ITEM_SLOTS) do
-    local methodItem = CreateFrame ("Frame", nil, self.methodWindow.itemTable)
+    local methodItem = GUI:CreateItemIcon(self.methodWindow.itemTable, v, {
+      size = ITEM_SIZE,
+      onDragStart = function(f)
+        if f.item then
+          PickupInventoryItem(f.slotId)
+        end
+      end,
+    })
     self.methodWindow.items[i] = methodItem
-    methodItem.slot = v
-    methodItem:ClearAllPoints ()
-    methodItem:SetSize(ITEM_SIZE, ITEM_SIZE)
-    self.methodWindow.itemTable:SetCell (i, 2, methodItem)
-    methodItem:EnableMouse (true)
-    methodItem:RegisterForDrag("LeftButton")
-    methodItem:SetScript ("OnEnter", function (itemSlot)
-      GameTooltip:SetOwner(itemSlot, "ANCHOR_LEFT")
-      if itemSlot.item then
-        GameTooltip:SetInventoryItem("player", itemSlot.slotId)
-      else
-        GameTooltip:SetText(_G[itemSlot.slot:upper()])
-      end
-      GameTooltip:Show()
-    end)
-    methodItem:SetScript ("OnLeave", GameTooltip_Hide)
-    methodItem:SetScript ("OnDragStart", function (itemSlot)
-      if itemSlot.item and ReforgingFrameIsVisible() then
-        PickupInventoryItem(itemSlot.slotId)
-      end
-    end)
-    methodItem.slotId, methodItem.slotTexture = GetInventorySlotInfo(v)
-    methodItem.texture = methodItem:CreateTexture (nil, "OVERLAY")
-    methodItem.texture:SetAllPoints (methodItem)
-    methodItem.texture:SetTexture (methodItem.slotTexture)
-
-    methodItem.quality = methodItem:CreateTexture(nil, "OVERLAY")
-    methodItem.quality:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    methodItem.quality:SetBlendMode("ADD")
-    methodItem.quality:SetAlpha(0.75)
-    methodItem.quality:SetSize(44,44)
-    methodItem.quality:SetPoint("CENTER", methodItem)
+    self.methodWindow.itemTable:SetCell(i, 2, methodItem)
 
     methodItem.reforge = self.methodWindow.itemTable:CreateFontString (nil, "OVERLAY", "GameFontHighlight")
     self.methodWindow.itemTable:SetCell (i, 3, methodItem.reforge, "LEFT")
@@ -2032,14 +2008,13 @@ function ReforgeLite:RefreshMethodWindow()
     local item = self.playerData[v.slotId]
     if not item:IsItemEmpty() then
       v.item = item:GetItemLink()
-      v.texture:SetTexture(item:GetItemIcon())
-      v.quality:SetVertexColor(item:GetItemQualityColor().color:GetRGB())
-      v.quality:Show()
+      v.icon:SetTexture(item:GetItemIcon())
+      v.IconBorder:SetVertexColor(item:GetItemQualityColor().color:GetRGB())
+      v.IconBorder:Show()
     else
       v.item = nil
-      v.texture:SetTexture (v.slotTexture)
-      v.quality:SetVertexColor(addonTable.COLORS.white:GetRGB())
-      v.quality:Hide()
+      v.icon:SetTexture(v.slotTexture)
+      v.IconBorder:Hide()
     end
     local slotInfo = self.pdb.method.items[i]
     if slotInfo.reforge and not item:IsItemEmpty() then
@@ -2079,7 +2054,7 @@ function ReforgeLite:UpdateMethodChecks ()
     for i, v in ipairs (self.methodWindow.items) do
       local item = self.playerData[v.slotId]
       v.item = item:GetItemLink()
-      v.texture:SetTexture (item:GetItemIcon() or v.slotTexture)
+      v.icon:SetTexture(item:GetItemIcon() or v.slotTexture)
       local isMatching = item:IsItemEmpty() or IsReforgeMatching(v.slotId, self.pdb.method.items[i].reforge, self.methodOverride[i])
       v.check:SetChecked(isMatching)
       anyDiffer = anyDiffer or not isMatching

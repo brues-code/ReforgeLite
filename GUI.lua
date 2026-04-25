@@ -656,6 +656,7 @@ function GUI:CreateItemIcon(parent, slot, options)
       end
       GameTooltip:Show()
     end)
+    frame:RegisterForDrag("LeftButton")
     frame:SetScript("OnMouseDown", function(f)
       if not f.itemInfo.itemGUID then return end
       if f.onMouseDown then f.onMouseDown(f) end
@@ -663,6 +664,7 @@ function GUI:CreateItemIcon(parent, slot, options)
   end
 
   frame.onMouseDown = options.onMouseDown
+  frame:SetScript("OnDragStart", options.onDragStart)
   frame.slot = slot
   frame.slotId, frame.slotTexture = GetInventorySlotInfo(slot)
   frame.icon:SetTexture(frame.slotTexture)
