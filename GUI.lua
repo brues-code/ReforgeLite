@@ -860,31 +860,34 @@ function GUI:CreateTable (rows, cols, firstRow, firstColumn, gridColor, parent)
     local cell = self.cells[i][j]
     local x = cell.offsX or 0
     local y = cell.offsY or 0
-    if cell.align == "FILL" then
-      cell:SetPoint ("TOPLEFT", self, "TOPLEFT", self:GetCellX (j - 1) + x, self:GetCellY (i - 1) + y)
-      cell:SetPoint ("BOTTOMRIGHT", self, "BOTTOMRIGHT", self:GetCellX (j) + x, self:GetCellY (i) + y)
+    local align = cell.align
 
-    elseif cell.align == "TOPLEFT" then
-      cell:SetPoint ("TOPLEFT", self, "TOPLEFT", self:GetCellX (j - 1) + 2 + x, self:GetCellY (i - 1) - 2 + y)
-    elseif cell.align == "LEFT" then
-      cell:SetPoint ("LEFT", self, "TOPLEFT", self:GetCellX (j - 1) + 2 + x, self:GetCellY (i - 0.5) + y)
-    elseif cell.align == "BOTTOMLEFT" then
-      cell:SetPoint ("BOTTOMLEFT", self, "TOPLEFT", self:GetCellX (j - 1) + 2 + x, self:GetCellY (i) + 2 + y)
-
-    elseif cell.align == "TOP" then
-      cell:SetPoint ("TOP", self, "TOPLEFT", self:GetCellX (j - 0.5) + x, self:GetCellY (j - 1) - 2 + y)
-    elseif cell.align == "CENTER" then
-      cell:SetPoint ("CENTER", self, "TOPLEFT", self:GetCellX (j - 0.5) + x, self:GetCellY (i - 0.5) + y)
-    elseif cell.align == "BOTTOM" then
-      cell:SetPoint ("BOTTOM", self, "TOPLEFT", self:GetCellX (j - 0.5) + x, self:GetCellY (j) + 2 + y)
-
-    elseif cell.align == "TOPRIGHT" then
-      cell:SetPoint ("TOPRIGHT", self, "TOPLEFT", self:GetCellX (j) - 2 + x, self:GetCellY (i - 1) - 2 + y)
-    elseif cell.align == "RIGHT" then
-      cell:SetPoint ("RIGHT", self, "TOPLEFT", self:GetCellX (j) - 2 + x, self:GetCellY (i - 0.5) + y)
-    elseif cell.align == "BOTTOMRIGHT" then
-      cell:SetPoint ("BOTTOMRIGHT", self, "TOPLEFT", self:GetCellX (j) - 2 + x, self:GetCellY (i) + 2 + y)
+    if align == "FILL" then
+      cell:SetPoint("TOPLEFT", self, "TOPLEFT", self:GetCellX(j - 1) + x, self:GetCellY(i - 1) + y)
+      cell:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", self:GetCellX(j) + x, self:GetCellY(i) + y)
+      return
     end
+
+    local M = 2
+    local xPos, yPos
+
+    if align:find("LEFT", 1, true) then
+      xPos = self:GetCellX(j - 1) + M
+    elseif align:find("RIGHT", 1, true) then
+      xPos = self:GetCellX(j) - M
+    else
+      xPos = self:GetCellX(j - 0.5)
+    end
+
+    if align:find("TOP", 1, true) then
+      yPos = self:GetCellY(i - 1) - M
+    elseif align:find("BOTTOM", 1, true) then
+      yPos = self:GetCellY(i) + M
+    else
+      yPos = self:GetCellY(i - 0.5)
+    end
+
+    cell:SetPoint(align, self, "TOPLEFT", xPos + x, yPos + y)
   end
   t.OnUpdateFix = function (self)
     self:SetScript ("OnSizeChanged", nil)
@@ -1037,39 +1040,37 @@ function GUI:CreateTable (rows, cols, firstRow, firstColumn, gridColor, parent)
     self:AutoSizeColumns(j)
   end
   t.textTagPool = {}
-  t.SetCellText = function (self, i, j, text, align, color, font)
+  t.SetCellText = function(self, i, j, text, align, color, font)
     align = align or "CENTER"
     color = color or addonTable.COLORS.white
     font = font or "GameFontNormalSmall"
 
-    if self.cells[i][j] and not self.cells[i][j].istag then
-      if type (self.cells[i][j].Recycle) == "function" then
-        self.cells[i][j]:Recycle ()
-      else
-        self.cells[i][j]:Hide ()
-      end
-      self.cells[i][j] = nil
+    local cell = self.cells[i][j]
+    if cell and not cell.istag then
+      if type(cell.Recycle) == "function" then cell:Recycle() else cell:Hide() end
+      cell = nil
     end
 
-    if self.cells[i][j] then
-      self.cells[i][j]:SetFontObject (font)
-      self.cells[i][j]:Show ()
-    elseif #self.textTagPool > 0 then
-      self.cells[i][j] = tremove (self.textTagPool)
-      self.cells[i][j]:SetFontObject (font)
-      self.cells[i][j]:Show ()
-    else
-      self.cells[i][j] = self:CreateFontString (nil, "OVERLAY", font)
-      self.cells[i][j].Recycle = function (tag)
-        tag:Hide ()
-        tinsert (self.textTagPool, tag)
+    if not cell then
+      if #self.textTagPool > 0 then
+        cell = tremove(self.textTagPool)
+      else
+        cell = self:CreateFontString(nil, "OVERLAY", font)
+        cell.Recycle = function(tag)
+          tag:Hide()
+          tinsert(self.textTagPool, tag)
+        end
       end
+      self.cells[i][j] = cell
     end
-    self.cells[i][j].istag = true
-    self.cells[i][j]:SetTextColor(color:GetRGB())
-    self.cells[i][j]:SetText (text)
-    self.cells[i][j].align = align
-    self:AlignCell (i, j)
+
+    cell.istag = true
+    cell:SetFontObject(font)
+    cell:Show()
+    cell:SetTextColor(color:GetRGB())
+    cell:SetText(text)
+    cell.align = align
+    self:AlignCell(i, j)
     self:AutoSizeColumns(j)
   end
   t.CollapseRow = function(self, i)
