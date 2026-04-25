@@ -73,7 +73,7 @@ end
 ---Disables buttons, edit boxes, checkboxes, sliders, and dropdowns
 ---@return nil
 function GUI:Lock()
-  for _, frames in ipairs({self.panelButtons, self.sliders}) do
+  for _, frames in ipairs({self.sliders}) do
     for _, frame in pairs(frames) do
       self:LockFrame(frame)
     end
@@ -121,7 +121,7 @@ end
 ---Unlocks all GUI widgets after computation completes
 ---@return nil
 function GUI:Unlock()
-  for _, frames in ipairs({self.panelButtons, self.sliders}) do
+  for _, frames in ipairs({self.sliders}) do
     for _, frame in pairs(frames) do
       self:UnlockFrame(frame)
     end
@@ -486,8 +486,23 @@ function GUI:CreateImageButton (parent, width, height, img, pus, opts)
   return btn
 end
 
-GUI.panelButtons = {}
-GUI.unusedPanelButtons = {}
+GUI.panelButtonPool = CreateUnsecuredFramePool("Button", UIParent, "UIPanelButtonTemplate",
+  function(_, btn)
+    btn:SetText("")
+    btn:Hide()
+    btn:ClearAllPoints()
+    btn:SetScript("OnClick", nil)
+    btn:SetScript("PreClick", nil)
+    btn:SetScript("OnEnter", nil)
+    btn:SetScript("OnLeave", nil)
+    for event in pairs(callbacks.Event) do
+      callbacks:UnregisterCallback(event, btn)
+    end
+    btn:SetParent(UIParent)
+  end
+)
+tinsert(GUI.widgetPools, GUI.panelButtonPool)
+
 ---Creates a standard panel button with recycling support
 ---@param parent Frame Parent frame
 ---@param text string Button text
@@ -496,37 +511,22 @@ GUI.unusedPanelButtons = {}
 ---@return Button btn The created panel button
 function GUI:CreatePanelButton(parent, text, handler, opts)
   opts = opts or {}
-  local btn
-  if #self.unusedPanelButtons > 0 then
-    btn = tremove(self.unusedPanelButtons)
-    btn:SetParent(parent)
-    btn:Show()
-    btn:Enable()
-    self.panelButtons[btn:GetName()] = btn
-  else
-    local name = self:GenerateWidgetName ()
-    btn = CreateFrame("Button", name, parent, "UIPanelButtonTemplate")
-    self.panelButtons[btn:GetName()] = btn
-    btn.Recycle = function (f)
-      f:SetText("")
-      f:Hide ()
-      f:ClearScripts()
-      for event in pairs(callbacks.Event) do
-          callbacks:UnregisterCallback(event, f:GetName())
-      end
-      self.panelButtons[f:GetName()] = nil
-      tinsert (self.unusedPanelButtons, f)
-    end
+  local btn, isNew = self.panelButtonPool:Acquire()
+  if isNew then
+    btn.Recycle = function(b) self.panelButtonPool:Release(b) end
     btn.RenderText = function(f, ...)
       f:SetText(...)
       f:FitToText()
     end
   end
+  btn:SetParent(parent)
+  btn:Show()
+  btn:Enable()
   btn.preventLock = opts.preventLock
   if opts then
     for event in pairs(callbacks.Event) do
       if opts[event] then
-        callbacks:RegisterCallback(event, function(_, self) opts[event](self) end, btn:GetName(), btn)
+        callbacks:RegisterCallback(event, function(_, self) opts[event](self) end, btn, btn)
       end
     end
   end
