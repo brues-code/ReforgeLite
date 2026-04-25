@@ -884,6 +884,13 @@ function ReforgeLite:CreateItemTable ()
     self.playerTalents[tier]:SetPoint("TOPLEFT", self.playerTalents[tier-1] or self.playerSpecTexture, "TOPRIGHT", 2, 0)
     self.playerTalents[tier]:SetSize(16, 16)
     self.playerTalents[tier]:SetTexCoord(self.playerSpecTexture:GetTexCoord())
+    self.playerTalents[tier]:SetScript("OnEnter", function(f)
+      if f.talentInfo then
+        GameTooltip:SetOwner(f, "ANCHOR_LEFT")
+        GameTooltip:SetTalent(f.talentInfo.talentID, false, false, f.talentInfo.activeSpecGroup)
+        GameTooltip:Show()
+      end
+    end)
     self.playerTalents[tier]:SetScript("OnLeave", GameTooltip_Hide)
   end
 
@@ -1796,14 +1803,10 @@ function ReforgeLite:UpdatePlayerSpecInfo()
         target = 'player'
       })
       self.playerTalents[tier]:SetTexture(talentInfo.icon)
-      self.playerTalents[tier]:SetScript("OnEnter", function(f)
-        GameTooltip:SetOwner(f, "ANCHOR_LEFT")
-        GameTooltip:SetTalent(talentInfo.talentID, false, false, activeSpecGroup)
-        GameTooltip:Show()
-      end)
+      self.playerTalents[tier].talentInfo = talentInfo
     else
       self.playerTalents[tier]:SetTexture(132222)
-      self.playerTalents[tier]:SetScript("OnEnter", nil)
+      self.playerTalents[tier].talentInfo = nil
     end
     self.playerTalents[tier]:SetShown(tierAvailable)
   end
