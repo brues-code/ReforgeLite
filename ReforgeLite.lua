@@ -931,44 +931,16 @@ function ReforgeLite:CreateItemTable ()
   end
   self.itemData = {}
   for i, v in ipairs (ITEM_SLOTS) do
-    self.itemData[i] = CreateFrame("Frame", nil, self.itemTable)
-    self.itemData[i].slot = v
-    self.itemData[i]:ClearAllPoints()
-    self.itemData[i]:SetSize(ITEM_SIZE, ITEM_SIZE)
+    self.itemData[i] = GUI:CreateItemIcon(self.itemTable, v, {
+      size = ITEM_SIZE,
+      onMouseDown = function(frame)
+        self.pdb.itemsLocked[frame.itemInfo.itemGUID] = not self.pdb.itemsLocked[frame.itemInfo.itemGUID] and 1 or nil
+        frame.lockOverlay:SetShown(self.pdb.itemsLocked[frame.itemInfo.itemGUID] ~= nil)
+      end,
+    })
     self.itemTable:SetCell(i, 0, self.itemData[i])
-    self.itemData[i]:EnableMouse(true)
-    self.itemData[i]:SetScript("OnEnter", function(frame)
-      GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
-      local hasItem = GameTooltip:SetInventoryItem("player", frame.slotId)
-      if not hasItem then
-        GameTooltip:SetText(_G[strupper(frame.slot)])
-      end
-      GameTooltip:Show()
-    end)
-    self.itemData[i]:SetScript ("OnLeave", GameTooltip_Hide)
-    self.itemData[i]:SetScript ("OnMouseDown", function (frame)
-      if not frame.itemInfo.itemGUID then return end
-      self.pdb.itemsLocked[frame.itemInfo.itemGUID] = not self.pdb.itemsLocked[frame.itemInfo.itemGUID] and 1 or nil
-      frame.locked:SetShown(self.pdb.itemsLocked[frame.itemInfo.itemGUID] ~= nil)
-    end)
-    self.itemData[i].slotId, self.itemData[i].slotTexture = GetInventorySlotInfo (v)
-    self.itemData[i].texture = self.itemData[i]:CreateTexture (nil, "ARTWORK")
-    self.itemData[i].texture:SetAllPoints (self.itemData[i])
-    self.itemData[i].texture:SetTexture (self.itemData[i].slotTexture)
-    self.itemData[i].texture:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-    self.itemData[i].locked = self.itemData[i]:CreateTexture (nil, "OVERLAY")
-    self.itemData[i].locked:SetAllPoints (self.itemData[i])
-    self.itemData[i].locked:SetTexture ("Interface\\PaperDollInfoFrame\\UI-GearManager-LeaveItem-Transparent")
-    self.itemData[i].quality = self.itemData[i]:CreateTexture (nil, "OVERLAY")
-    self.itemData[i].quality:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    self.itemData[i].quality:SetBlendMode("ADD")
-    self.itemData[i].quality:SetAlpha(0.75)
-    self.itemData[i].quality:SetSize(44, 44)
-    self.itemData[i].quality:SetPoint ("CENTER", self.itemData[i])
-    self.itemData[i].itemInfo = {}
-    self.itemData[i].stats = {}
     for j = 1, ITEM_STAT_COUNT do
-      local fontColors = { grey = addonTable.COLORS.lightgrey, red = addonTable.COLORS.red, green = addonTable.COLORS.green, white = addonTable.COLORS.white  }
+      local fontColors = { grey = addonTable.COLORS.lightgrey, red = addonTable.COLORS.red, green = addonTable.COLORS.green, white = addonTable.COLORS.white }
       self.itemTable:SetCellText(i, j, "-", nil, fontColors.grey)
       self.itemData[i].stats[j] = self.itemTable.cells[i][j]
       self.itemData[i].stats[j].fontColors = fontColors
@@ -1770,7 +1742,7 @@ function ReforgeLite:UpdateItems()
       end
     end
     v.quality:SetShown(not item:IsItemEmpty())
-    v.locked:SetShown(self.pdb.itemsLocked[v.itemInfo.itemGUID])
+    v.lockOverlay:SetShown(self.pdb.itemsLocked[v.itemInfo.itemGUID])
 
     for j, s in ipairs (ITEM_STATS) do
       local currentValue = (stats or {})[s.name]

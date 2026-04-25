@@ -613,6 +613,74 @@ function GUI:CreateSlider(parent, text, value, max, onChange, width, height)
   return slider
 end
 
+GUI.itemIconPool = MakeRecyclablePool("Frame", UIParent, nil,
+  function(_, frame)
+    frame:Hide()
+    frame:ClearAllPoints()
+    frame:SetParent(UIParent)
+    if frame.texture then frame.texture:SetTexture(nil) end
+    if frame.lockOverlay then frame.lockOverlay:Hide() end
+    frame.itemInfo = {}
+  end
+)
+
+---Creates an item icon frame for the item table
+---@param parent Frame Parent frame
+---@param slot string Inventory slot name (e.g. "HeadSlot")
+---@param options? table Options: size (number), onMouseDown (function)
+---@return Frame frame The item icon frame
+function GUI:CreateItemIcon(parent, slot, options)
+  options = options or {}
+  local frame, isNew = self.itemIconPool:Acquire()
+
+  if isNew then
+    Mixin(frame, WidgetLockMixin)
+
+    frame.texture = frame:CreateTexture(nil, "ARTWORK")
+    frame.texture:SetAllPoints(frame)
+    frame.texture:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+
+    frame.lockOverlay = frame:CreateTexture(nil, "OVERLAY")
+    frame.lockOverlay:SetAllPoints(frame)
+    frame.lockOverlay:SetTexture("Interface\\PaperDollInfoFrame\\UI-GearManager-LeaveItem-Transparent")
+
+    frame.quality = frame:CreateTexture(nil, "OVERLAY")
+    frame.quality:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+    frame.quality:SetBlendMode("ADD")
+    frame.quality:SetAlpha(0.75)
+    frame.quality:SetSize(44, 44)
+    frame.quality:SetPoint("CENTER", frame)
+
+    frame.itemInfo = {}
+    frame.stats = {}
+    frame:EnableMouse(true)
+    frame:SetScript("OnLeave", GameTooltip_Hide)
+    frame:SetScript("OnEnter", function(f)
+      GameTooltip:SetOwner(f, "ANCHOR_LEFT")
+      local hasItem = GameTooltip:SetInventoryItem("player", f.slotId)
+      if not hasItem then
+        GameTooltip:SetText(_G[strupper(f.slot)])
+      end
+      GameTooltip:Show()
+    end)
+    frame:SetScript("OnMouseDown", function(f)
+      if not f.itemInfo.itemGUID then return end
+      if f.onMouseDown then f.onMouseDown(f) end
+    end)
+  end
+
+  frame.onMouseDown = options.onMouseDown
+  frame.slot = slot
+  frame.slotId, frame.slotTexture = GetInventorySlotInfo(slot)
+  frame.texture:SetTexture(frame.slotTexture)
+  frame.lockOverlay:Hide()
+  local size = options.size or 24
+  frame:SetSize(size, size)
+  frame:SetParent(parent)
+  frame:Show()
+  return frame
+end
+
 -------------------------------------------------------------------------------
 
 ---Creates a horizontal line
