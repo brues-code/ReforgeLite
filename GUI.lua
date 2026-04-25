@@ -581,15 +581,15 @@ GUI.sliderPool = MakeRecyclablePool("Slider", UIParent, "UISliderTemplateWithLab
 ---@param max number Maximum value
 ---@param onChange function Callback when value changes (value)
 ---@return Slider slider The created slider
-function GUI:CreateSlider(parent, text, value, max, onChange)
+function GUI:CreateSlider(parent, text, value, max, onChange, width, height)
   local slider, isNew = self.sliderPool:Acquire()
   if isNew then
-    slider:SetSize(150, 15)
     slider:SetObeyStepOnDrag(true)
     slider:EnableMouseWheel(false)
     slider:SetValueStep(1)
     Mixin(slider, WidgetLockMixin)
   end
+  slider:SetSize(width or 150, height or 15)
   slider:SetParent(parent)
   slider:Show()
   slider:Enable()
