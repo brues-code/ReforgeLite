@@ -643,7 +643,7 @@ function GUI:CreateItemIcon(parent, slot, options)
 
     frame.lockOverlay = frame:CreateTexture(nil, "OVERLAY")
     frame.lockOverlay:SetAllPoints(frame)
-    frame.lockOverlay:SetTexture("Interface\\PaperDollInfoFrame\\UI-GearManager-LeaveItem-Transparent")
+    frame.lockOverlay:SetTexture(255353)
 
     frame.itemInfo = {}
     frame.stats = {}
