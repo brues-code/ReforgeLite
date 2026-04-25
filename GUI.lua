@@ -73,7 +73,7 @@ end
 ---Disables buttons, edit boxes, checkboxes, sliders, and dropdowns
 ---@return nil
 function GUI:Lock()
-  for _, frames in ipairs({self.panelButtons, self.imgButtons, self.checkButtons, self.sliders}) do
+  for _, frames in ipairs({self.panelButtons, self.imgButtons, self.sliders}) do
     for _, frame in pairs(frames) do
       self:LockFrame(frame)
     end
@@ -121,7 +121,7 @@ end
 ---Unlocks all GUI widgets after computation completes
 ---@return nil
 function GUI:Unlock()
-  for _, frames in ipairs({self.panelButtons, self.imgButtons, self.checkButtons, self.sliders}) do
+  for _, frames in ipairs({self.panelButtons, self.imgButtons, self.sliders}) do
     for _, frame in pairs(frames) do
       self:UnlockFrame(frame)
     end
@@ -180,14 +180,14 @@ end
 
 GUI.widgetPools = {}
 
-GUI.editBoxPool = CreateUnsecuredFramePool("EditBox", UIParent, "InputBoxTemplate",
-  function(_, box)
-    box:Hide()
-    box:ClearAllPoints()
-    box:ClearScripts()
-    box:SetParent(UIParent)
-  end
-)
+local function PoolResetFrame(_, frame)
+  frame:Hide()
+  frame:ClearAllPoints()
+  frame:ClearScripts()
+  frame:SetParent(UIParent)
+end
+
+GUI.editBoxPool = CreateUnsecuredFramePool("EditBox", UIParent, "InputBoxTemplate", PoolResetFrame)
 tinsert(GUI.widgetPools, GUI.editBoxPool)
 
 ---Creates a numeric edit box with recycling support
@@ -409,8 +409,9 @@ function GUI:CreateDropdown (parent, values, options)
   return sel
 end
 
-GUI.checkButtons = {}
-GUI.unusedCheckButtons = {}
+GUI.checkButtonPool = CreateUnsecuredFramePool("CheckButton", UIParent, "UICheckButtonTemplate", PoolResetFrame)
+tinsert(GUI.widgetPools, GUI.checkButtonPool)
+
 ---Creates a checkbox with recycling support
 ---@param parent Frame Parent frame
 ---@param text string Label text
@@ -420,23 +421,12 @@ GUI.unusedCheckButtons = {}
 ---@return CheckButton btn The created checkbox
 function GUI:CreateCheckButton (parent, text, default, setter, opts)
   opts = opts or {}
-  local btn
-  if #self.unusedCheckButtons > 0 then
-    btn = tremove (self.unusedCheckButtons)
-    btn:SetParent (parent)
-    btn:Show ()
-    self.checkButtons[btn:GetName()] = btn
-  else
-    local name = self:GenerateWidgetName ()
-    btn = CreateFrame ("CheckButton", name, parent, "UICheckButtonTemplate")
-    self.checkButtons[name] = btn
-    btn.Recycle = function (btn)
-      btn:Hide ()
-      btn:ClearScripts()
-      self.checkButtons[btn:GetName()] = nil
-      tinsert (self.unusedCheckButtons, btn)
-    end
+  local btn, isNew = self.checkButtonPool:Acquire()
+  if isNew then
+    btn.Recycle = function(b) self.checkButtonPool:Release(b) end
   end
+  btn:SetParent(parent)
+  btn:Show()
   btn.Text:SetText(text)
   btn:SetChecked (default)
   if setter then
