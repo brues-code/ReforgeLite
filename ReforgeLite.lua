@@ -742,9 +742,14 @@ function ReforgeLite:CreateFrame()
   self:SetBackdropColor(addonTable.COLORS.panel:GetRGB())
   self:SetBackdropBorderColor(addonTable.COLORS.panel:GetRGB())
 
+  self.close = CreateFrame("Button", nil, self, "UIPanelCloseButtonNoScripts")
+  self.close:SetSize(28, 28)
+  self.close:SetPoint("TOPRIGHT")
+  self.close:SetScript("OnClick", function(btn) btn:GetParent():Hide() end)
+
   self.titlebar = self:CreateTexture(nil,"BACKGROUND")
-  self.titlebar:SetPoint("TOPLEFT", 3, -3)
-  self.titlebar:SetPoint("TOPRIGHT", -3, 3)
+  self.titlebar:SetPoint("TOPLEFT", self, "TOPLEFT", 3, -3)
+  self.titlebar:SetPoint("TOPRIGHT", self, "TOPRIGHT", -3, -3)
   self.titlebar:SetHeight(20)
   self.SetFrameActive = function(frame, active)
     if active then
@@ -774,55 +779,37 @@ function ReforgeLite:CreateFrame()
   end)
   tinsert(UISpecialFrames, self:GetName()) -- allow closing with escape
 
-  self.titleIcon = CreateFrame("Frame", nil, self)
+  self.titleIcon = self:CreateTexture(nil, "OVERLAY")
   self.titleIcon:SetSize(16, 16)
-  self.titleIcon:SetPoint ("TOPLEFT", 12, floor(self.titleIcon:GetHeight())-floor(self.titlebar:GetHeight()))
+  self.titleIcon:SetPoint("LEFT", self.titlebar, "LEFT", 9, 0)
+  self.titleIcon:SetTexture(459028)
 
-  self.titleIcon.texture = self.titleIcon:CreateTexture("ARTWORK")
-  self.titleIcon.texture:SetAllPoints(self.titleIcon)
-  self.titleIcon.texture:SetTexture(459028) -- [[Interface\Reforging\Reforge-Portrait]]
+  self.title = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  self.title:SetText(C_AddOns.GetAddOnTitle(addonName))
+  self.title:SetPoint("LEFT", self.titleIcon, "RIGHT", 2, 0)
 
-  self.title = self:CreateFontString (nil, "OVERLAY", "GameFontHighlight")
-  self.title:SetText (C_AddOns.GetAddOnTitle(addonName))
-  self.title:SetPoint ("BOTTOMLEFT", self.titleIcon, "BOTTOMRIGHT", 2, 1)
+  self.versionInfo = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  self.versionInfo:SetText(addonTable.isDev and "Dev" or C_AddOns.GetAddOnMetadata(addonName, 'Version'))
+  self.versionInfo:SetPoint("LEFT", self.title, "RIGHT", 2, 0)
 
-  self.versionInfo = self:CreateFontString (nil, "OVERLAY", "GameFontNormal")
-  self.versionInfo:SetText (addonTable.isDev and "Dev" or C_AddOns.GetAddOnMetadata(addonName, 'Version'))
-  self.versionInfo:SetPoint ("BOTTOMLEFT", self.title, "BOTTOMRIGHT", 2, 0)
-
-  self.close = CreateFrame ("Button", nil, self, "UIPanelCloseButtonNoScripts")
-  self.close:SetSize(28, 28)
-  self.close:SetPoint("TOPRIGHT")
-  self.close:SetScript("OnClick", function(btn) btn:GetParent():Hide() end)
-
-  local function GripOnMouseDown(btn, arg)
-    if arg == "LeftButton" then
-      local anchorPoint = btn:GetPoint()
-      btn:GetParent():StartSizing(anchorPoint)
-      btn:GetParent().sizing = true
-    end
-  end
-
-  local function GripOnMouseUp(btn, arg)
-    if btn:GetParent().sizing then
-      btn:GetParent():StopMovingOrSizing ()
-      btn:GetParent().sizing = false
-      btn:GetParent():UpdateWindowSize ()
-    end
-  end
-
-  self.leftGrip = CreateFrame ("Button", nil, self, "PanelResizeButtonTemplate")
+  self.leftGrip = CreateFrame("Button", nil, self, "PanelResizeButtonTemplate")
   self.leftGrip:SetSize(16, 16)
-  self.leftGrip:SetRotationDegrees(-90)
   self.leftGrip:SetPoint("BOTTOMLEFT")
-  self.leftGrip:SetScript("OnMouseDown", GripOnMouseDown)
-  self.leftGrip:SetScript("OnMouseUp", GripOnMouseUp)
+  self.leftGrip.target = self
+  self.leftGrip:SetRotationDegrees(-90)
+  self.leftGrip:SetScript("OnMouseDown", function(btn, arg)
+    if arg == "LeftButton" then
+      btn.isActive = true
+      self:StartSizing("BOTTOMLEFT")
+    end
+  end)
+  self.leftGrip:SetOnResizeStoppedCallback(function() self:UpdateWindowSize() end)
 
-  self.rightGrip = CreateFrame ("Button", nil, self, "PanelResizeButtonTemplate")
+  self.rightGrip = CreateFrame("Button", nil, self, "PanelResizeButtonTemplate")
   self.rightGrip:SetSize(16, 16)
   self.rightGrip:SetPoint("BOTTOMRIGHT")
-  self.rightGrip:SetScript("OnMouseDown", GripOnMouseDown)
-  self.rightGrip:SetScript("OnMouseUp", GripOnMouseUp)
+  self.rightGrip.target = self
+  self.rightGrip:SetOnResizeStoppedCallback(function() self:UpdateWindowSize() end)
 
   self:CreateItemTable ()
 

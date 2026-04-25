@@ -218,6 +218,7 @@
     "sort",
     "BreakUpLargeNumbers",
     "GetInventoryItemID",
+    "SafePack",
     "PlayerUtil"
   ],
   "diagnostics.disable": [
