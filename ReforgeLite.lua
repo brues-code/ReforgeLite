@@ -474,7 +474,7 @@ function ReforgeLite:ValidateWoWSimsString(importStr)
   return true, newItems
 end
 
-function ReforgeLite:ApplyWoWSimsImport(newItems, attachToReforge)
+function ReforgeLite:ApplyWoWSimsImport(newItems)
   if not self.pdb.method then
     self.pdb.method = { items = newItems }
   else
@@ -483,7 +483,7 @@ function ReforgeLite:ApplyWoWSimsImport(newItems, attachToReforge)
   self.pdb.methodOrigin = addonTable.WoWSimsOriginTag
   self:FinalizeReforge(self.pdb)
   self:UpdateMethodCategory()
-  self:ShowMethodWindow(attachToReforge)
+  self:ShowMethodWindow()
 end
 
 function ReforgeLite:ValidatePawnString(importStr)
@@ -1985,8 +1985,10 @@ function ReforgeLite:CreateMethodWindow()
   self.methodWindow.cost:SetPoint ("LEFT", self.methodWindow.reforge, "RIGHT", 5, 0)
 
   self.methodWindow.AttachToReforgingFrame = function(frame)
-    frame:ClearAllPoints()
-    frame:SetPoint("LEFT", ReforgingFrame, "RIGHT")
+    if ReforgingFrameIsVisible() then
+      frame:ClearAllPoints()
+      frame:SetPoint("LEFT", ReforgingFrame, "RIGHT")
+    end
   end
 
   if not self.db.showHelp then
@@ -2030,18 +2032,15 @@ function ReforgeLite:RefreshMethodWindow()
   self:UpdateMethodChecks ()
 end
 
-function ReforgeLite:ShowMethodWindow(attachToReforge)
+function ReforgeLite:ShowMethodWindow()
   self:CreateMethodWindow()
-
   GUI:ClearEditFocus()
   if self.methodWindow:IsShown() then
     self:SetNewTopWindow(self.methodWindow)
   else
     self.methodWindow:Show()
   end
-  if attachToReforge then
-      self.methodWindow:AttachToReforgingFrame()
-  end
+  self.methodWindow:AttachToReforgingFrame()
 end
 
 local function IsReforgeMatching (slotId, reforge, override)

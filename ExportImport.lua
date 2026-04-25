@@ -94,7 +94,7 @@ function ReforgeLite:ImportData(anchor)
         end
         local validWoWSims, wowsims = self:ValidateWoWSimsString(userInput)
         if validWoWSims then
-            self:ApplyWoWSimsImport(wowsims, anchor ~= nil)
+            self:ApplyWoWSimsImport(wowsims)
             widget.parent:Hide()
             return
         end
