@@ -73,7 +73,7 @@ end
 ---Disables buttons, edit boxes, checkboxes, sliders, and dropdowns
 ---@return nil
 function GUI:Lock()
-  for _, frames in ipairs({self.panelButtons, self.imgButtons, self.sliders}) do
+  for _, frames in ipairs({self.panelButtons, self.sliders}) do
     for _, frame in pairs(frames) do
       self:LockFrame(frame)
     end
@@ -121,7 +121,7 @@ end
 ---Unlocks all GUI widgets after computation completes
 ---@return nil
 function GUI:Unlock()
-  for _, frames in ipairs({self.panelButtons, self.imgButtons, self.sliders}) do
+  for _, frames in ipairs({self.panelButtons, self.sliders}) do
     for _, frame in pairs(frames) do
       self:UnlockFrame(frame)
     end
@@ -446,8 +446,9 @@ function GUI:CreateCheckButton (parent, text, default, setter, opts)
   return btn
 end
 
-GUI.imgButtons = {}
-GUI.unusedImgButtons = {}
+GUI.imgButtonPool = CreateUnsecuredFramePool("Button", UIParent, nil, PoolResetFrame)
+tinsert(GUI.widgetPools, GUI.imgButtonPool)
+
 ---Creates an image button with recycling support
 ---@param parent Frame Parent frame
 ---@param width number Width in pixels
@@ -458,22 +459,12 @@ GUI.unusedImgButtons = {}
 ---@return Button btn The created image button
 function GUI:CreateImageButton (parent, width, height, img, pus, opts)
   opts = opts or {}
-  local btn
-  if #self.unusedImgButtons > 0 then
-    btn = tremove (self.unusedImgButtons)
-    btn:SetParent (parent)
-    btn:Show ()
-  else
-    local name = self:GenerateWidgetName ()
-    btn = CreateFrame ("Button", name, parent)
-    self.imgButtons[btn:GetName()] = btn
-    btn.Recycle = function (f)
-      f:Hide ()
-      f:ClearScripts()
-      self.imgButtons[f:GetName()] = nil
-      tinsert (self.unusedImgButtons, f)
-    end
+  local btn, isNew = self.imgButtonPool:Acquire()
+  if isNew then
+    btn.Recycle = function(b) self.imgButtonPool:Release(b) end
   end
+  btn:SetParent(parent)
+  btn:Show()
   btn:SetNormalTexture (img)
   btn:SetPushedTexture (pus)
   btn:SetHighlightTexture (opts.hlt or img)
