@@ -144,6 +144,12 @@ function WidgetLockMixin:UnlockWidget()
 end
 
 local DropdownWidgetLockMixin = {}
+function DropdownWidgetLockMixin:LockWidget()
+  if not self.preventLock then
+    self:SetEnabled(false)
+    self.locked = true
+  end
+end
 function DropdownWidgetLockMixin:UnlockWidget()
   if self.locked then
     self:SetEnabled(true)
@@ -151,11 +157,22 @@ function DropdownWidgetLockMixin:UnlockWidget()
   end
 end
 
+local function MakeRecyclablePool(...)
+  local pool = CreateUnsecuredFramePool(...)
+  local originalAcquire = pool.Acquire
+  pool.Acquire = function(self)
+    local widget, isNew = originalAcquire(self)
+    if isNew then
+      widget.Recycle = function(w) pool:Release(w) end
+    end
+    return widget, isNew
+  end
+  tinsert(GUI.pools, pool)
+  return pool
+end
 
 
-GUI.editBoxPool = CreateUnsecuredFramePool("EditBox", UIParent, "InputBoxTemplate", PoolResetFrame)
-tinsert(GUI.pools, GUI.editBoxPool)
-
+GUI.editBoxPool = MakeRecyclablePool("EditBox", UIParent, "InputBoxTemplate", PoolResetFrame)
 ---Creates a numeric edit box with recycling support
 ---@param parent Frame Parent frame
 ---@param width number Width in pixels
@@ -173,7 +190,6 @@ function GUI:CreateEditBox (parent, width, height, default, setter, opts)
     box:SetNumeric()
     box:SetTextInsets(0, 0, 3, 3)
     box:SetMaxLetters(8)
-    box.Recycle = function(b) self.editBoxPool:Release(b) end
     Mixin(box, WidgetLockMixin)
   end
   box:SetParent(parent)
@@ -210,7 +226,7 @@ function GUI:CreateEditBox (parent, width, height, default, setter, opts)
 end
 
 
-GUI.dropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "WowStyle1DropdownTemplate",
+GUI.dropdownPool = MakeRecyclablePool("DropdownButton", UIParent, "WowStyle1DropdownTemplate",
   function(_, sel)
     sel:Hide()
     sel:ClearAllPoints()
@@ -228,9 +244,7 @@ GUI.dropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "WowStyl
     sel:SetParent(UIParent)
   end
 )
-tinsert(GUI.pools, GUI.dropdownPool)
-
-GUI.filterDropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "WowStyle1FilterDropdownTemplate",
+GUI.filterDropdownPool = MakeRecyclablePool("DropdownButton", UIParent, "WowStyle1FilterDropdownTemplate",
   function(_, dropdown)
     dropdown:Hide()
     dropdown:ClearAllPoints()
@@ -240,8 +254,6 @@ GUI.filterDropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "W
     dropdown:SetParent(UIParent)
   end
 )
-tinsert(GUI.pools, GUI.filterDropdownPool)
-
 ---Creates a WowStyle1FilterDropdownTemplate button with recycling support
 ---@param parent Frame Parent frame
 ---@param text string Button text
@@ -252,13 +264,6 @@ function GUI:CreateFilterDropdown (parent, text, options)
   local dropdown, isNew = self.filterDropdownPool:Acquire()
   if isNew then
     dropdown.defaultResizeToTextPadding = dropdown.resizeToTextPadding
-    dropdown.Recycle = function(d) self.filterDropdownPool:Release(d) end
-    dropdown.LockWidget = function(f)
-      if f:IsEnabled() and not f.preventLock then
-        f:SetEnabled(false)
-        f.locked = true
-      end
-    end
     Mixin(dropdown, DropdownWidgetLockMixin)
   end
   dropdown:SetParent(parent)
@@ -304,13 +309,6 @@ function GUI:CreateDropdown (parent, values, options)
       if dropdown.Text then dropdown.Text:SetText("") end
     end
     sel:SetHeight(20)
-    sel.Recycle = function(s) self.dropdownPool:Release(s) end
-    sel.LockWidget = function(f)
-      if not f.isDisabled then
-        f:SetEnabled(false)
-        f.locked = true
-      end
-    end
     Mixin(sel, DropdownWidgetLockMixin)
   end
   sel:SetParent(parent)
@@ -360,9 +358,7 @@ function GUI:CreateDropdown (parent, values, options)
   return sel
 end
 
-GUI.checkButtonPool = CreateUnsecuredFramePool("CheckButton", UIParent, "UICheckButtonTemplate", PoolResetFrame)
-tinsert(GUI.pools, GUI.checkButtonPool)
-
+GUI.checkButtonPool = MakeRecyclablePool("CheckButton", UIParent, "UICheckButtonTemplate", PoolResetFrame)
 ---Creates a checkbox with recycling support
 ---@param parent Frame Parent frame
 ---@param text string Label text
@@ -374,7 +370,6 @@ function GUI:CreateCheckButton (parent, text, default, setter, opts)
   opts = opts or {}
   local btn, isNew = self.checkButtonPool:Acquire()
   if isNew then
-    btn.Recycle = function(b) self.checkButtonPool:Release(b) end
     Mixin(btn, WidgetLockMixin)
   end
   btn:SetParent(parent)
@@ -398,9 +393,7 @@ function GUI:CreateCheckButton (parent, text, default, setter, opts)
   return btn
 end
 
-GUI.imgButtonPool = CreateUnsecuredFramePool("Button", UIParent, nil, PoolResetFrame)
-tinsert(GUI.pools, GUI.imgButtonPool)
-
+GUI.imgButtonPool = MakeRecyclablePool("Button", UIParent, nil, PoolResetFrame)
 ---Creates an image button with recycling support
 ---@param parent Frame Parent frame
 ---@param width number Width in pixels
@@ -413,7 +406,6 @@ function GUI:CreateImageButton (parent, width, height, img, pus, opts)
   opts = opts or {}
   local btn, isNew = self.imgButtonPool:Acquire()
   if isNew then
-    btn.Recycle = function(b) self.imgButtonPool:Release(b) end
     Mixin(btn, WidgetLockMixin)
   end
   btn:SetParent(parent)
@@ -438,7 +430,7 @@ function GUI:CreateImageButton (parent, width, height, img, pus, opts)
   return btn
 end
 
-GUI.panelButtonPool = CreateUnsecuredFramePool("Button", UIParent, "UIPanelButtonTemplate",
+GUI.panelButtonPool = MakeRecyclablePool("Button", UIParent, "UIPanelButtonTemplate",
   function(_, btn)
     btn:SetText("")
     btn:Hide()
@@ -453,8 +445,6 @@ GUI.panelButtonPool = CreateUnsecuredFramePool("Button", UIParent, "UIPanelButto
     btn:SetParent(UIParent)
   end
 )
-tinsert(GUI.pools, GUI.panelButtonPool)
-
 ---Creates a standard panel button with recycling support
 ---@param parent Frame Parent frame
 ---@param text string Button text
@@ -465,7 +455,6 @@ function GUI:CreatePanelButton(parent, text, handler, opts)
   opts = opts or {}
   local btn, isNew = self.panelButtonPool:Acquire()
   if isNew then
-    btn.Recycle = function(b) self.panelButtonPool:Release(b) end
     Mixin(btn, WidgetLockMixin)
     btn.RenderText = function(f, ...)
       f:SetText(...)
@@ -557,7 +546,7 @@ function GUI:SetHelpButtonsShown(shown)
   end
 end
 
-GUI.sliderPool = CreateUnsecuredFramePool("Slider", UIParent, "UISliderTemplateWithLabels",
+GUI.sliderPool = MakeRecyclablePool("Slider", UIParent, "UISliderTemplateWithLabels",
   function(_, slider)
     slider.Text:SetText("")
     slider:Hide()
@@ -568,8 +557,6 @@ GUI.sliderPool = CreateUnsecuredFramePool("Slider", UIParent, "UISliderTemplateW
     slider:SetParent(UIParent)
   end
 )
-tinsert(GUI.pools, GUI.sliderPool)
-
 ---Creates a slider with recycling support
 ---@param parent Frame Parent frame
 ---@param text string Label text
@@ -584,7 +571,6 @@ function GUI:CreateSlider(parent, text, value, max, onChange)
     slider:SetObeyStepOnDrag(true)
     slider:EnableMouseWheel(false)
     slider:SetValueStep(1)
-    slider.Recycle = function(s) self.sliderPool:Release(s) end
     Mixin(slider, WidgetLockMixin)
   end
   slider:SetParent(parent)
