@@ -35,13 +35,6 @@ addonTable.COLORS = {
   white = WHITE_FONT_COLOR,
 }
 
----Generates a unique widget name
----@return string name Unique widget name (e.g., "ReforgeLiteWidget1")
-function GUI:GenerateWidgetName ()
-  self.widgetCount = (self.widgetCount or 0) + 1
-  return addonName .. "Widget" .. self.widgetCount
-end
-
 ---Clears focus from all edit boxes
 ---@return nil
 function GUI:ClearEditFocus()
@@ -78,7 +71,7 @@ function GUI:Lock()
       self:LockFrame(frame)
     end
   end
-  for _, dropdown in pairs(self.dropdowns) do
+  for dropdown in self.dropdownPool:EnumerateActive() do
     if not dropdown.isDisabled then
       dropdown:SetEnabled(false)
       dropdown.locked = true
@@ -121,7 +114,7 @@ function GUI:Unlock()
       self:UnlockFrame(frame)
     end
   end
-  for _, dropdown in pairs(self.dropdowns) do
+  for dropdown in self.dropdownPool:EnumerateActive() do
     if dropdown.locked then
       dropdown:SetEnabled(true)
       dropdown.locked = nil
@@ -233,8 +226,24 @@ function GUI:CreateEditBox (parent, width, height, default, setter, opts)
 end
 
 
-GUI.dropdowns = {}
-GUI.unusedDropdowns = {}
+GUI.dropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "WowStyle1DropdownTemplate",
+  function(_, sel)
+    sel:Hide()
+    sel:ClearAllPoints()
+    sel.setter = nil
+    sel.value = nil
+    sel.selectedName = nil
+    sel.selectedID = nil
+    sel.selectedValue = nil
+    sel.menuItemEnabled = nil
+    sel.menuItemHidden = nil
+    sel.values = nil
+    if sel.Text then
+      sel.Text:SetText("")
+    end
+    sel:SetParent(UIParent)
+  end
+)
 
 GUI.filterDropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "WowStyle1FilterDropdownTemplate",
   function(_, dropdown)
@@ -276,72 +285,37 @@ end
 ---@param options table Options: default, setter(dropdown, value, oldValue), width, hideArrow
 ---@return DropdownButton dropdown The created dropdown
 function GUI:CreateDropdown (parent, values, options)
-  local sel
-  if #self.unusedDropdowns > 0 then
-    sel = tremove (self.unusedDropdowns)
-    sel:SetParent (parent)
-    sel:Show ()
-    sel:SetEnabled(true)
-    self.dropdowns[sel:GetName()] = sel
-  else
-    sel = CreateFrame("DropdownButton", self:GenerateWidgetName(), parent, "WowStyle1DropdownTemplate")
-    self.dropdowns[sel:GetName()] = sel
-
-    -- Vertically center the text
+  local sel, isNew = self.dropdownPool:Acquire()
+  if isNew then
     if sel.Text then
       sel.Text:ClearAllPoints()
       sel.Text:SetPoint("RIGHT", sel.Arrow, "LEFT")
       sel.Text:SetPoint("LEFT", sel, "LEFT", 9, 0)
+      sel.Text:SetTextColor(addonTable.COLORS.white:GetRGB())
     end
-
     sel.GetValues = function(frame) return GetValueOrCallFunction(frame, 'values') end
-
-    sel.SetValue = function (dropdown, value)
+    sel.SetValue = function(dropdown, value)
       dropdown.value = value
       dropdown.selectedValue = value
-      local values = dropdown:GetValues()
-      if not values then
-        if dropdown.Text then
-          dropdown.Text:SetText("")
-        end
+      local vals = dropdown:GetValues()
+      if not vals then
+        if dropdown.Text then dropdown.Text:SetText("") end
         return
       end
-      for _, v in ipairs(values) do
+      for _, v in ipairs(vals) do
         if v.value == value then
-          if dropdown.Text then
-            dropdown.Text:SetText(v.name)
-          end
+          if dropdown.Text then dropdown.Text:SetText(v.name) end
           return
         end
       end
-      if dropdown.Text then
-        dropdown.Text:SetText("")
-      end
+      if dropdown.Text then dropdown.Text:SetText("") end
     end
-
     sel:SetHeight(20)
-    sel:SetEnabled(true)
-    if sel.Text then
-      sel.Text:SetTextColor(addonTable.COLORS.white:GetRGB())
-    end
-
-    sel.Recycle = function (frame)
-      frame:Hide ()
-      frame.setter = nil
-      frame.value = nil
-      frame.selectedName = nil
-      frame.selectedID = nil
-      frame.selectedValue = nil
-      frame.menuItemEnabled = nil
-      frame.menuItemHidden = nil
-      frame.values = nil
-      if frame.Text then
-        frame.Text:SetText("")
-      end
-      self.dropdowns[frame:GetName()] = nil
-      tinsert(self.unusedDropdowns, frame)
-    end
+    sel.Recycle = function(s) self.dropdownPool:Release(s) end
   end
+  sel:SetParent(parent)
+  sel:Show()
+  sel:SetEnabled(true)
 
   sel.values = values
   sel.setter = options.setter
