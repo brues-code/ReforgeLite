@@ -43,65 +43,13 @@ function GUI:ClearEditFocus()
   end
 end
 
----@param frame Frame
-function GUI:LockFrame(frame)
-  if frame:IsEnabled() and not frame.preventLock then
-    frame.locked = true
-    frame:Disable()
-    if frame:IsMouseEnabled() then
-      frame:EnableMouse(false)
-      frame.mouseDisabled = true
-    elseif frame:IsMouseMotionEnabled() then
-      frame:SetMouseMotionEnabled(false)
-      frame.mouseMotionDisabled = true
-    end
-    if frame.SetTextColor then
-      frame.prevColor = {frame:GetTextColor()}
-      frame:SetTextColor(addonTable.COLORS.grey:GetRGB())
-    end
-  end
-end
-
 ---Locks all GUI widgets to prevent interaction during computation
 ---Disables buttons, edit boxes, checkboxes, sliders, and dropdowns
 ---@return nil
 function GUI:Lock()
-  for _, pool in ipairs(self.widgetPools) do
+  for _, pool in ipairs(self.pools) do
     for frame in pool:EnumerateActive() do
-      self:LockFrame(frame)
-    end
-  end
-  for dropdown in self.dropdownPool:EnumerateActive() do
-    if not dropdown.isDisabled then
-      dropdown:SetEnabled(false)
-      dropdown.locked = true
-    end
-  end
-  for dropdown in self.filterDropdownPool:EnumerateActive() do
-    if dropdown:IsEnabled() and not dropdown.preventLock then
-      dropdown:SetEnabled(false)
-      dropdown.locked = true
-    end
-  end
-end
-
----Unlocks a single frame
----@param frame Frame The frame to unlock
----@return nil
-function GUI:UnlockFrame(frame)
-  if frame.locked then
-    frame:Enable()
-    frame.locked = nil
-    if frame.mouseDisabled then
-      frame:EnableMouse(true)
-      frame.mouseDisabled = nil
-    elseif frame.mouseMotionDisabled then
-      frame:SetMouseMotionEnabled(true)
-      frame.mouseMotionDisabled = nil
-    end
-    if frame.prevColor then
-      frame:SetTextColor(unpack(frame.prevColor))
-      frame.prevColor = nil
+      frame:LockWidget()
     end
   end
 end
@@ -109,17 +57,9 @@ end
 ---Unlocks all GUI widgets after computation completes
 ---@return nil
 function GUI:Unlock()
-  for _, pool in ipairs(self.widgetPools) do
+  for _, pool in ipairs(self.pools) do
     for frame in pool:EnumerateActive() do
-      self:UnlockFrame(frame)
-    end
-  end
-  for _, pool in ipairs(self.dropdownPools) do
-    for dropdown in pool:EnumerateActive() do
-      if dropdown.locked then
-        dropdown:SetEnabled(true)
-        dropdown.locked = nil
-      end
+      frame:UnlockWidget()
     end
   end
 end
@@ -157,8 +97,7 @@ function GUI:SetTooltip (widget, tip)
   end
 end
 
-GUI.widgetPools = {}
-GUI.dropdownPools = {}
+GUI.pools = {}
 
 local function PoolResetFrame(_, frame)
   frame:Hide()
@@ -167,8 +106,55 @@ local function PoolResetFrame(_, frame)
   frame:SetParent(UIParent)
 end
 
+local WidgetLockMixin = {}
+function WidgetLockMixin:LockWidget()
+  if self:IsEnabled() and not self.preventLock then
+    self.locked = true
+    self:Disable()
+    if self:IsMouseEnabled() then
+      self:EnableMouse(false)
+      self.mouseDisabled = true
+    elseif self:IsMouseMotionEnabled() then
+      self:SetMouseMotionEnabled(false)
+      self.mouseMotionDisabled = true
+    end
+    if self.SetTextColor then
+      self.prevColor = {self:GetTextColor()}
+      self:SetTextColor(addonTable.COLORS.grey:GetRGB())
+    end
+  end
+end
+
+function WidgetLockMixin:UnlockWidget()
+  if self.locked then
+    self:Enable()
+    self.locked = nil
+    if self.mouseDisabled then
+      self:EnableMouse(true)
+      self.mouseDisabled = nil
+    elseif self.mouseMotionDisabled then
+      self:SetMouseMotionEnabled(true)
+      self.mouseMotionDisabled = nil
+    end
+    if self.prevColor then
+      self:SetTextColor(unpack(self.prevColor))
+      self.prevColor = nil
+    end
+  end
+end
+
+local DropdownWidgetLockMixin = {}
+function DropdownWidgetLockMixin:UnlockWidget()
+  if self.locked then
+    self:SetEnabled(true)
+    self.locked = nil
+  end
+end
+
+
+
 GUI.editBoxPool = CreateUnsecuredFramePool("EditBox", UIParent, "InputBoxTemplate", PoolResetFrame)
-tinsert(GUI.widgetPools, GUI.editBoxPool)
+tinsert(GUI.pools, GUI.editBoxPool)
 
 ---Creates a numeric edit box with recycling support
 ---@param parent Frame Parent frame
@@ -188,6 +174,7 @@ function GUI:CreateEditBox (parent, width, height, default, setter, opts)
     box:SetTextInsets(0, 0, 3, 3)
     box:SetMaxLetters(8)
     box.Recycle = function(b) self.editBoxPool:Release(b) end
+    Mixin(box, WidgetLockMixin)
   end
   box:SetParent(parent)
   box:Show()
@@ -241,7 +228,7 @@ GUI.dropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "WowStyl
     sel:SetParent(UIParent)
   end
 )
-tinsert(GUI.dropdownPools, GUI.dropdownPool)
+tinsert(GUI.pools, GUI.dropdownPool)
 
 GUI.filterDropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "WowStyle1FilterDropdownTemplate",
   function(_, dropdown)
@@ -253,7 +240,7 @@ GUI.filterDropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "W
     dropdown:SetParent(UIParent)
   end
 )
-tinsert(GUI.dropdownPools, GUI.filterDropdownPool)
+tinsert(GUI.pools, GUI.filterDropdownPool)
 
 ---Creates a WowStyle1FilterDropdownTemplate button with recycling support
 ---@param parent Frame Parent frame
@@ -266,6 +253,13 @@ function GUI:CreateFilterDropdown (parent, text, options)
   if isNew then
     dropdown.defaultResizeToTextPadding = dropdown.resizeToTextPadding
     dropdown.Recycle = function(d) self.filterDropdownPool:Release(d) end
+    dropdown.LockWidget = function(f)
+      if f:IsEnabled() and not f.preventLock then
+        f:SetEnabled(false)
+        f.locked = true
+      end
+    end
+    Mixin(dropdown, DropdownWidgetLockMixin)
   end
   dropdown:SetParent(parent)
   dropdown:Show()
@@ -311,6 +305,13 @@ function GUI:CreateDropdown (parent, values, options)
     end
     sel:SetHeight(20)
     sel.Recycle = function(s) self.dropdownPool:Release(s) end
+    sel.LockWidget = function(f)
+      if not f.isDisabled then
+        f:SetEnabled(false)
+        f.locked = true
+      end
+    end
+    Mixin(sel, DropdownWidgetLockMixin)
   end
   sel:SetParent(parent)
   sel:Show()
@@ -360,7 +361,7 @@ function GUI:CreateDropdown (parent, values, options)
 end
 
 GUI.checkButtonPool = CreateUnsecuredFramePool("CheckButton", UIParent, "UICheckButtonTemplate", PoolResetFrame)
-tinsert(GUI.widgetPools, GUI.checkButtonPool)
+tinsert(GUI.pools, GUI.checkButtonPool)
 
 ---Creates a checkbox with recycling support
 ---@param parent Frame Parent frame
@@ -374,6 +375,7 @@ function GUI:CreateCheckButton (parent, text, default, setter, opts)
   local btn, isNew = self.checkButtonPool:Acquire()
   if isNew then
     btn.Recycle = function(b) self.checkButtonPool:Release(b) end
+    Mixin(btn, WidgetLockMixin)
   end
   btn:SetParent(parent)
   btn:Show()
@@ -397,7 +399,7 @@ function GUI:CreateCheckButton (parent, text, default, setter, opts)
 end
 
 GUI.imgButtonPool = CreateUnsecuredFramePool("Button", UIParent, nil, PoolResetFrame)
-tinsert(GUI.widgetPools, GUI.imgButtonPool)
+tinsert(GUI.pools, GUI.imgButtonPool)
 
 ---Creates an image button with recycling support
 ---@param parent Frame Parent frame
@@ -412,6 +414,7 @@ function GUI:CreateImageButton (parent, width, height, img, pus, opts)
   local btn, isNew = self.imgButtonPool:Acquire()
   if isNew then
     btn.Recycle = function(b) self.imgButtonPool:Release(b) end
+    Mixin(btn, WidgetLockMixin)
   end
   btn:SetParent(parent)
   btn:Show()
@@ -450,7 +453,7 @@ GUI.panelButtonPool = CreateUnsecuredFramePool("Button", UIParent, "UIPanelButto
     btn:SetParent(UIParent)
   end
 )
-tinsert(GUI.widgetPools, GUI.panelButtonPool)
+tinsert(GUI.pools, GUI.panelButtonPool)
 
 ---Creates a standard panel button with recycling support
 ---@param parent Frame Parent frame
@@ -463,6 +466,7 @@ function GUI:CreatePanelButton(parent, text, handler, opts)
   local btn, isNew = self.panelButtonPool:Acquire()
   if isNew then
     btn.Recycle = function(b) self.panelButtonPool:Release(b) end
+    Mixin(btn, WidgetLockMixin)
     btn.RenderText = function(f, ...)
       f:SetText(...)
       f:FitToText()
@@ -564,7 +568,7 @@ GUI.sliderPool = CreateUnsecuredFramePool("Slider", UIParent, "UISliderTemplateW
     slider:SetParent(UIParent)
   end
 )
-tinsert(GUI.widgetPools, GUI.sliderPool)
+tinsert(GUI.pools, GUI.sliderPool)
 
 ---Creates a slider with recycling support
 ---@param parent Frame Parent frame
@@ -581,6 +585,7 @@ function GUI:CreateSlider(parent, text, value, max, onChange)
     slider:EnableMouseWheel(false)
     slider:SetValueStep(1)
     slider.Recycle = function(s) self.sliderPool:Release(s) end
+    Mixin(slider, WidgetLockMixin)
   end
   slider:SetParent(parent)
   slider:Show()

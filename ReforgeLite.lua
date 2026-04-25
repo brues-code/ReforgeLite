@@ -1440,7 +1440,7 @@ function ReforgeLite:CreateOptionList ()
         addonTable.pauseRoutine = 'pause'
         btn:RenderText(CANCEL)
         self.computeButton:RenderText(CONTINUE)
-        GUI:UnlockFrame(self.computeButton)
+        self.computeButton:UnlockWidget()
       end
     end,
     {
