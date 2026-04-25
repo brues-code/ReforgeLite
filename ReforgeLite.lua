@@ -1959,6 +1959,12 @@ function ReforgeLite:CreateMethodWindow()
           PickupInventoryItem(f.slotId)
         end
       end,
+      onRightClick = function(f)
+        if f.item and ReforgingFrameIsVisible() and not PLAYER_ITEM_DATA[f.slotId]:IsItemLocked() then
+          PickupInventoryItem(f.slotId)
+          C_Reforge.SetReforgeFromCursorItem()
+        end
+      end,
     })
     self.methodWindow.items[i] = methodItem
     self.methodWindow.itemTable:SetCell(i, 2, methodItem)
