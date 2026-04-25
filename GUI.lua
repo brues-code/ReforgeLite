@@ -73,11 +73,6 @@ end
 ---Disables buttons, edit boxes, checkboxes, sliders, and dropdowns
 ---@return nil
 function GUI:Lock()
-  for _, frames in ipairs({self.sliders}) do
-    for _, frame in pairs(frames) do
-      self:LockFrame(frame)
-    end
-  end
   for _, pool in ipairs(self.widgetPools) do
     for frame in pool:EnumerateActive() do
       self:LockFrame(frame)
@@ -121,11 +116,6 @@ end
 ---Unlocks all GUI widgets after computation completes
 ---@return nil
 function GUI:Unlock()
-  for _, frames in ipairs({self.sliders}) do
-    for _, frame in pairs(frames) do
-      self:UnlockFrame(frame)
-    end
-  end
   for _, pool in ipairs(self.widgetPools) do
     for frame in pool:EnumerateActive() do
       self:UnlockFrame(frame)
@@ -606,8 +596,19 @@ function GUI:SetHelpButtonsShown(shown)
   end
 end
 
-GUI.sliders = {}
-GUI.unusedSliders = {}
+GUI.sliderPool = CreateUnsecuredFramePool("Slider", UIParent, "UISliderTemplateWithLabels",
+  function(_, slider)
+    slider.Text:SetText("")
+    slider:Hide()
+    slider:ClearAllPoints()
+    slider:SetScript("OnValueChanged", nil)
+    slider:SetScript("OnEnable", nil)
+    slider:SetScript("OnDisable", nil)
+    slider:SetParent(UIParent)
+  end
+)
+tinsert(GUI.widgetPools, GUI.sliderPool)
+
 ---Creates a slider with recycling support
 ---@param parent Frame Parent frame
 ---@param text string Label text
@@ -616,29 +617,17 @@ GUI.unusedSliders = {}
 ---@param onChange function Callback when value changes (value)
 ---@return Slider slider The created slider
 function GUI:CreateSlider(parent, text, value, max, onChange)
-  local slider
-  if #self.unusedSliders > 0 then
-    slider = tremove(self.unusedSliders)
-    slider:SetParent(parent)
-    slider:Show()
-    slider:Enable()
-    self.sliders[slider:GetName()] = slider
-  else
-    local name = self:GenerateWidgetName()
-    slider = CreateFrame("Slider", name, parent, "UISliderTemplateWithLabels")
-    self.sliders[name] = slider
+  local slider, isNew = self.sliderPool:Acquire()
+  if isNew then
     slider:SetSize(150, 15)
     slider:SetObeyStepOnDrag(true)
     slider:EnableMouseWheel(false)
     slider:SetValueStep(1)
-    slider.Recycle = function (f)
-      f.Text:SetText("")
-      f:Hide()
-      f:ClearScripts()
-      self.sliders[f:GetName()] = nil
-      tinsert(self.unusedSliders, f)
-    end
+    slider.Recycle = function(s) self.sliderPool:Release(s) end
   end
+  slider:SetParent(parent)
+  slider:Show()
+  slider:Enable()
   slider:SetMinMaxValues(1, max)
   slider:SetValue(value)
   slider:SetScript("OnValueChanged", onChange)
