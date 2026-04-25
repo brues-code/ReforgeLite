@@ -2,6 +2,7 @@
 local _, addonTable = ...
 local GUI = {}
 addonTable.GUI = GUI
+LibStub("AceHook-3.0"):Embed(GUI)
 
 ---Global callback registry for addon events
 ---
@@ -515,6 +516,24 @@ function GUI:CreateColorPicker(parent, width, height, color, handler)
       swatchFunc = applyColor(ColorPickerFrame.GetColorRGB),
       cancelFunc = applyColor(ColorPickerFrame.GetPreviousValues),
     })
+    ColorPickerFrame.prevPoint = {
+      point = SafePack(ColorPickerFrame:GetPoint()),
+      strata = ColorPickerFrame:GetFrameStrata()
+    }
+    ColorPickerFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+    ColorPickerFrame:ClearAllPoints()
+    ColorPickerFrame:SetPoint("CENTER", addonTable.ReforgeLite, "CENTER")
+    if not GUI:IsHooked(ColorPickerFrame, "OnHide") then
+      GUI:HookScript(ColorPickerFrame, "OnHide", function(f)
+        if f.prevPoint then
+          f:SetFrameStrata(f.prevPoint.strata)
+          f:ClearAllPoints()
+          f:SetPoint(SafeUnpack(f.prevPoint.point))
+          f.prevPoint = nil
+        end
+        GUI:Unhook(f, "OnHide")
+      end)
+    end
   end)
   return box
 end
