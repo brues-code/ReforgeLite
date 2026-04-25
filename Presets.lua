@@ -701,9 +701,8 @@ function ReforgeLite:InitPresets()
 
     rootDescription:CreateDivider()
 
-    local function GetCapPresetName(presetValue)
-      local value = FindValueInTableIf(self.capPresets, function(preset) return preset.value == presetValue end) or {}
-      return value.name
+    local function GetCapPreset(presetValue)
+      return FindValueInTableIf(self.capPresets, function(preset) return preset.value == presetValue end) or {}
     end
 
     local function FormatWeightsTooltip(tooltip, element, preset)
@@ -737,11 +736,11 @@ function ReforgeLite:InitPresets()
           if cap and cap.stat and cap.stat > 0 and cap.points and cap.points[1] then
             local statName = addonTable.itemStats[cap.stat] and addonTable.itemStats[cap.stat].long or ""
             local pt = cap.points[1]
-            local presetName = GetCapPresetName(pt.preset)
+            local presetInfo = GetCapPreset(pt.preset)
             local methodName = methodNames[pt.method] or ""
             local capText
-            if presetName and pt.preset ~= CAPS.ManualCap then
-              capText = ("%s %s"):format(methodName, presetName)
+            if presetInfo and pt.preset ~= CAPS.ManualCap then
+              capText = ("%s %s"):format(methodName, presetInfo.name)
             else
               capText = ("%s %d"):format(methodName, pt.value or 0)
             end
