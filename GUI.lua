@@ -1,5 +1,5 @@
 ---@type string, AddonTable
-local addonName, addonTable = ...
+local _, addonTable = ...
 local GUI = {}
 addonTable.GUI = GUI
 
@@ -330,10 +330,7 @@ function GUI:CreateDropdown (parent, values, options)
       return
     end
     for _, item in ipairs(values) do
-      -- Skip hidden items
-      if dropdown.menuItemHidden and dropdown.menuItemHidden(item) then
-        -- Skip
-      else
+      if not (dropdown.menuItemHidden and dropdown.menuItemHidden(item)) then
         local isSelected = function(i) return dropdown.value == i.value end
         local setSelected = function(i)
           local oldValue = dropdown.value
@@ -425,7 +422,6 @@ function GUI:CreateImageButton (parent, width, height, img, pus, opts)
   btn:SetSize(width, height)
   btn:SetScript ("OnClick", opts.OnClick)
 
-  -- Set disabled texture - use custom or create desaturated version of normal texture
   if opts.disabledTexture then
     btn:SetDisabledTexture(opts.disabledTexture)
   else
@@ -477,11 +473,9 @@ function GUI:CreatePanelButton(parent, text, handler, opts)
   btn:Show()
   btn:Enable()
   btn.preventLock = opts.preventLock
-  if opts then
-    for event in pairs(callbacks.Event) do
-      if opts[event] then
-        callbacks:RegisterCallback(event, function(_, self) opts[event](self) end, btn, btn)
-      end
+  for event in pairs(callbacks.Event) do
+    if opts[event] then
+      callbacks:RegisterCallback(event, function(_, frame) opts[event](frame) end, btn, btn)
     end
   end
   btn:RenderText(text)
@@ -597,13 +591,13 @@ function GUI:CreateSlider(parent, text, value, max, onChange)
   slider:SetScript("OnValueChanged", onChange)
   slider.Text:SetText(text)
   slider:SetScript("OnEnable", function(self)
-    for k, v in ipairs({self.Text, self.Low, self.High}) do
+    for _, v in ipairs({self.Text, self.Low, self.High}) do
       v:SetTextColor(unpack(v.originalFontColor))
       v.originalFontColor = nil
     end
   end)
   slider:SetScript("OnDisable", function(self)
-    for k, v in ipairs({self.Text, self.Low, self.High}) do
+    for _, v in ipairs({self.Text, self.Low, self.High}) do
       v.originalFontColor = {v:GetTextColor()}
       v:SetTextColor(addonTable.COLORS.grey:GetRGB())
     end
