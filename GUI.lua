@@ -84,7 +84,7 @@ function GUI:Lock()
       dropdown.locked = true
     end
   end
-  for _, dropdown in pairs(self.filterDropdowns) do
+  for dropdown in self.filterDropdownPool:EnumerateActive() do
     if dropdown:IsEnabled() and not dropdown.preventLock then
       dropdown:SetEnabled(false)
       dropdown.locked = true
@@ -127,7 +127,7 @@ function GUI:Unlock()
       dropdown.locked = nil
     end
   end
-  for _, dropdown in pairs(self.filterDropdowns) do
+  for dropdown in self.filterDropdownPool:EnumerateActive() do
     if dropdown.locked then
       dropdown:SetEnabled(true)
       dropdown.locked = nil
@@ -235,8 +235,17 @@ end
 
 GUI.dropdowns = {}
 GUI.unusedDropdowns = {}
-GUI.filterDropdowns = {}
-GUI.unusedFilterDropdowns = {}
+
+GUI.filterDropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "WowStyle1FilterDropdownTemplate",
+  function(_, dropdown)
+    dropdown:Hide()
+    dropdown:ClearAllPoints()
+    dropdown:SetScript("OnEnter", nil)
+    dropdown:SetScript("OnLeave", nil)
+    dropdown.resizeToTextPadding = dropdown.defaultResizeToTextPadding
+    dropdown:SetParent(UIParent)
+  end
+)
 
 ---Creates a WowStyle1FilterDropdownTemplate button with recycling support
 ---@param parent Frame Parent frame
@@ -245,33 +254,14 @@ GUI.unusedFilterDropdowns = {}
 ---@return DropdownButton dropdown The created filter dropdown
 function GUI:CreateFilterDropdown (parent, text, options)
   options = options or {}
-  local dropdown
-  if #self.unusedFilterDropdowns > 0 then
-    dropdown = tremove (self.unusedFilterDropdowns)
-    dropdown:SetParent (parent)
-    dropdown:Show ()
-    dropdown:SetEnabled(true)
-    if dropdown.originalResizeToTextPadding then
-      dropdown.resizeToTextPadding = dropdown.originalResizeToTextPadding
-      dropdown.originalResizeToTextPadding = nil
-    end
-    self.filterDropdowns[dropdown:GetName()] = dropdown
-  else
-    local name = self:GenerateWidgetName()
-    dropdown = CreateFrame("DropdownButton", name, parent, "WowStyle1FilterDropdownTemplate")
-    self.filterDropdowns[name] = dropdown
-    dropdown.originalResizeToTextPadding = dropdown.resizeToTextPadding
-
-    dropdown.Recycle = function (frame)
-      frame:Hide ()
-      frame:ClearScripts()
-      frame.originalResizeToTextPadding = frame.resizeToTextPadding
-      frame.resizeToTextPadding = nil
-      self.filterDropdowns[frame:GetName()] = nil
-      tinsert(self.unusedFilterDropdowns, frame)
-    end
+  local dropdown, isNew = self.filterDropdownPool:Acquire()
+  if isNew then
+    dropdown.defaultResizeToTextPadding = dropdown.resizeToTextPadding
+    dropdown.Recycle = function(d) self.filterDropdownPool:Release(d) end
   end
-
+  dropdown:SetParent(parent)
+  dropdown:Show()
+  dropdown:SetEnabled(true)
   if options.resizeToTextPadding then
     dropdown.resizeToTextPadding = options.resizeToTextPadding
   end
