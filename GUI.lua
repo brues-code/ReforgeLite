@@ -114,16 +114,12 @@ function GUI:Unlock()
       self:UnlockFrame(frame)
     end
   end
-  for dropdown in self.dropdownPool:EnumerateActive() do
-    if dropdown.locked then
-      dropdown:SetEnabled(true)
-      dropdown.locked = nil
-    end
-  end
-  for dropdown in self.filterDropdownPool:EnumerateActive() do
-    if dropdown.locked then
-      dropdown:SetEnabled(true)
-      dropdown.locked = nil
+  for _, pool in ipairs(self.dropdownPools) do
+    for dropdown in pool:EnumerateActive() do
+      if dropdown.locked then
+        dropdown:SetEnabled(true)
+        dropdown.locked = nil
+      end
     end
   end
 end
@@ -162,6 +158,7 @@ function GUI:SetTooltip (widget, tip)
 end
 
 GUI.widgetPools = {}
+GUI.dropdownPools = {}
 
 local function PoolResetFrame(_, frame)
   frame:Hide()
@@ -244,6 +241,7 @@ GUI.dropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "WowStyl
     sel:SetParent(UIParent)
   end
 )
+tinsert(GUI.dropdownPools, GUI.dropdownPool)
 
 GUI.filterDropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "WowStyle1FilterDropdownTemplate",
   function(_, dropdown)
@@ -255,6 +253,7 @@ GUI.filterDropdownPool = CreateUnsecuredFramePool("DropdownButton", UIParent, "W
     dropdown:SetParent(UIParent)
   end
 )
+tinsert(GUI.dropdownPools, GUI.filterDropdownPool)
 
 ---Creates a WowStyle1FilterDropdownTemplate button with recycling support
 ---@param parent Frame Parent frame
