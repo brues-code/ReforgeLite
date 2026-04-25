@@ -50,27 +50,37 @@ function GUI:ClearEditFocus()
   end
 end
 
+---@param frame Frame
+function GUI:LockFrame(frame)
+  if frame:IsEnabled() and not frame.preventLock then
+    frame.locked = true
+    frame:Disable()
+    if frame:IsMouseEnabled() then
+      frame:EnableMouse(false)
+      frame.mouseDisabled = true
+    elseif frame:IsMouseMotionEnabled() then
+      frame:SetMouseMotionEnabled(false)
+      frame.mouseMotionDisabled = true
+    end
+    if frame.SetTextColor then
+      frame.prevColor = {frame:GetTextColor()}
+      frame:SetTextColor(addonTable.COLORS.grey:GetRGB())
+    end
+  end
+end
+
 ---Locks all GUI widgets to prevent interaction during computation
 ---Disables buttons, edit boxes, checkboxes, sliders, and dropdowns
 ---@return nil
 function GUI:Lock()
-  for _, frames in ipairs({self.panelButtons, self.imgButtons, self.editBoxes, self.checkButtons, self.sliders}) do
+  for _, frames in ipairs({self.panelButtons, self.imgButtons, self.checkButtons, self.sliders}) do
     for _, frame in pairs(frames) do
-      if frame:IsEnabled() and not frame.preventLock then
-        frame.locked = true
-        frame:Disable()
-        if frame:IsMouseEnabled() then
-          frame:EnableMouse(false)
-          frame.mouseDisabled = true
-        elseif frame:IsMouseMotionEnabled() then
-          frame:SetMouseMotionEnabled(false)
-          frame.mouseMotionDisabled = true
-        end
-        if frame.SetTextColor then
-          frame.prevColor = {frame:GetTextColor()}
-          frame:SetTextColor(addonTable.COLORS.grey:GetRGB())
-        end
-      end
+      self:LockFrame(frame)
+    end
+  end
+  for _, pool in ipairs(self.widgetPools) do
+    for frame in pool:EnumerateActive() do
+      self:LockFrame(frame)
     end
   end
   for _, dropdown in pairs(self.dropdowns) do
@@ -111,8 +121,13 @@ end
 ---Unlocks all GUI widgets after computation completes
 ---@return nil
 function GUI:Unlock()
-  for _, frames in ipairs({self.panelButtons, self.imgButtons, self.editBoxes, self.checkButtons, self.sliders}) do
+  for _, frames in ipairs({self.panelButtons, self.imgButtons, self.checkButtons, self.sliders}) do
     for _, frame in pairs(frames) do
+      self:UnlockFrame(frame)
+    end
+  end
+  for _, pool in ipairs(self.widgetPools) do
+    for frame in pool:EnumerateActive() do
       self:UnlockFrame(frame)
     end
   end
@@ -163,8 +178,18 @@ function GUI:SetTooltip (widget, tip)
   end
 end
 
-GUI.editBoxes = {}
-GUI.unusedEditBoxes = {}
+GUI.widgetPools = {}
+
+GUI.editBoxPool = CreateUnsecuredFramePool("EditBox", UIParent, "InputBoxTemplate",
+  function(_, box)
+    box:Hide()
+    box:ClearAllPoints()
+    box:ClearScripts()
+    box:SetParent(UIParent)
+  end
+)
+tinsert(GUI.widgetPools, GUI.editBoxPool)
+
 ---Creates a numeric edit box with recycling support
 ---@param parent Frame Parent frame
 ---@param width number Width in pixels
@@ -175,30 +200,19 @@ GUI.unusedEditBoxes = {}
 ---@return EditBox box The created edit box
 function GUI:CreateEditBox (parent, width, height, default, setter, opts)
   opts = opts or {}
-  local box
-  if #self.unusedEditBoxes > 0 then
-    box = tremove(self.unusedEditBoxes)
-    box:SetParent(parent)
-    box:Show()
-    box:SetTextColor(addonTable.COLORS.white:GetRGB())
-    box:EnableMouse(true)
-    self.editBoxes[box:GetName()] = box
-  else
-    box = CreateFrame ("EditBox", self:GenerateWidgetName (), parent, "InputBoxTemplate")
-    self.editBoxes[box:GetName()] = box
-    box:SetAutoFocus (false)
+  local box, isNew = self.editBoxPool:Acquire()
+  if isNew then
+    box:SetAutoFocus(false)
     box:SetFontObject(ChatFontNormal)
-    box:SetTextColor(addonTable.COLORS.white:GetRGB())
-    box:SetNumeric ()
-    box:SetTextInsets (0, 0, 3, 3)
-    box:SetMaxLetters (8)
-    box.Recycle = function (box)
-      box:Hide ()
-      box:ClearScripts()
-      self.editBoxes[box:GetName()] = nil
-      tinsert (self.unusedEditBoxes, box)
-    end
+    box:SetNumeric()
+    box:SetTextInsets(0, 0, 3, 3)
+    box:SetMaxLetters(8)
+    box.Recycle = function(b) self.editBoxPool:Release(b) end
   end
+  box:SetParent(parent)
+  box:Show()
+  box:SetTextColor(addonTable.COLORS.white:GetRGB())
+  box:EnableMouse(true)
   if width then
     box:SetWidth(width)
   end
