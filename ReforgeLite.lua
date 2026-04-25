@@ -934,6 +934,7 @@ function ReforgeLite:CreateItemTable ()
     self.itemData[i] = GUI:CreateItemIcon(self.itemTable, v, {
       size = ITEM_SIZE,
       onMouseDown = function(frame)
+        if not frame.itemInfo.itemGUID then return end
         self.pdb.itemsLocked[frame.itemInfo.itemGUID] = not self.pdb.itemsLocked[frame.itemInfo.itemGUID] and 1 or nil
         frame.lockOverlay:SetShown(self.pdb.itemsLocked[frame.itemInfo.itemGUID] ~= nil)
       end,

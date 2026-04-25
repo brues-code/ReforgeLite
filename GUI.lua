@@ -629,7 +629,7 @@ GUI.itemIconPool = MakeRecyclablePool("Button", UIParent, "ItemButtonTemplate",
 ---Creates an item icon button for the item table
 ---@param parent Frame Parent frame
 ---@param slot string Inventory slot name (e.g. "HeadSlot")
----@param options? table Options: size (number), onMouseDown (function)
+---@param options? table Options: size (number), onMouseDown (function), onDragStart (function)
 ---@return Button frame The item icon button
 function GUI:CreateItemIcon(parent, slot, options)
   options = options or {}
@@ -657,13 +657,9 @@ function GUI:CreateItemIcon(parent, slot, options)
       GameTooltip:Show()
     end)
     frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnMouseDown", function(f)
-      if not f.itemInfo.itemGUID then return end
-      if f.onMouseDown then f.onMouseDown(f) end
-    end)
   end
 
-  frame.onMouseDown = options.onMouseDown
+  frame:SetScript("OnMouseDown", options.onMouseDown)
   frame:SetScript("OnDragStart", options.onDragStart)
   frame.slot = slot
   frame.slotId, frame.slotTexture = GetInventorySlotInfo(slot)
