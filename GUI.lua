@@ -143,19 +143,6 @@ function WidgetLockMixin:UnlockWidget()
   end
 end
 
-local DropdownWidgetLockMixin = {}
-function DropdownWidgetLockMixin:LockWidget()
-  if not self.preventLock then
-    self:SetEnabled(false)
-    self.locked = true
-  end
-end
-function DropdownWidgetLockMixin:UnlockWidget()
-  if self.locked then
-    self:SetEnabled(true)
-    self.locked = nil
-  end
-end
 
 local function MakeRecyclablePool(...)
   local pool = CreateUnsecuredFramePool(...)
@@ -264,7 +251,7 @@ function GUI:CreateFilterDropdown (parent, text, options)
   local dropdown, isNew = self.filterDropdownPool:Acquire()
   if isNew then
     dropdown.defaultResizeToTextPadding = dropdown.resizeToTextPadding
-    Mixin(dropdown, DropdownWidgetLockMixin)
+    Mixin(dropdown, WidgetLockMixin)
   end
   dropdown:SetParent(parent)
   dropdown:Show()
@@ -309,7 +296,7 @@ function GUI:CreateDropdown (parent, values, options)
       if dropdown.Text then dropdown.Text:SetText("") end
     end
     sel:SetHeight(20)
-    Mixin(sel, DropdownWidgetLockMixin)
+    Mixin(sel, WidgetLockMixin)
   end
   sel:SetParent(parent)
   sel:Show()
