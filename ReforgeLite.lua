@@ -551,14 +551,14 @@ function ReforgeLite:CreateCategory (name)
   c.button:ClearAllPoints ()
   c.button:SetSize (14,14)
   c.button:SetPoint ("TOPLEFT")
-  c.button:SetHighlightTexture ("Interface\\Buttons\\UI-PlusButton-Hilight")
+  c.button:SetHighlightTexture(130837)
   c.button.UpdateTexture = function (self)
     if self:GetParent ().expanded then
-      self:SetNormalTexture ("Interface\\Buttons\\UI-MinusButton-Up")
-      self:SetPushedTexture ("Interface\\Buttons\\UI-MinusButton-Down")
+      self:SetNormalTexture(130821) -- "Interface\\Buttons\\UI-MinusButton-Up"
+      self:SetPushedTexture(130820) -- "Interface\\Buttons\\UI-MinusButton-Down"
     else
-      self:SetNormalTexture ("Interface\\Buttons\\UI-PlusButton-Up")
-      self:SetPushedTexture ("Interface\\Buttons\\UI-PlusButton-Down")
+      self:SetNormalTexture(130838) --"Interface\\Buttons\\UI-PlusButton-Up"
+      self:SetPushedTexture(130836) -- "Interface\\Buttons\\UI-PlusButton-Down"
     end
   end
   c.button:UpdateTexture ()
@@ -961,8 +961,7 @@ function ReforgeLite:AddCapPoint (i, loading)
     tinsert (self.pdb.caps[i].points, 1, {value = 0, method = 1, after = 0, preset = 1})
   end
 
-  local rem = GUI:CreateImageButton (self.statCaps, 20, 20, "Interface\\PaperDollInfoFrame\\UI-GearManager-LeaveItem-Transparent",
-    "Interface\\PaperDollInfoFrame\\UI-GearManager-LeaveItem-Transparent", {
+  local rem = GUI:CreateImageButton (self.statCaps, 20, 20, 255353, {
       OnClick = function()
         self:RemoveCapPoint(i, point)
         self.statCaps:ToggleStatDropdownToCorrectState()
@@ -1343,11 +1342,11 @@ function ReforgeLite:CreateOptionList ()
         return not (val > 0 and otherCap and otherCap.stat and otherCap.stat.value == val)
       end
     })
-    self.statCaps[i].add = GUI:CreateImageButton (self.statCaps, 20, 20, "Interface\\Buttons\\UI-PlusButton-Up",
-      "Interface\\Buttons\\UI-PlusButton-Down", {
+    self.statCaps[i].add = GUI:CreateImageButton (self.statCaps, 20, 20, 130838, {
         OnClick = function() self:AddCapPoint(i) end,
-        disabledTexture = "Interface\\Buttons\\UI-PlusButton-Disabled",
-        hlt = "Interface\\Buttons\\UI-PlusButton-Hilight",
+        disabledTexture = 130835,
+        hlt = 130837,
+        pus = 130836,
         tooltip = L["Add cap"]
       })
     self.statCaps:SetCell (i, 0, self.statCaps[i].stat, "LEFT", 0, 0)

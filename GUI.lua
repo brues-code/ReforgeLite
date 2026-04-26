@@ -386,10 +386,9 @@ GUI.imgButtonPool = MakeRecyclablePool("Button", UIParent, nil, PoolResetFrame)
 ---@param width number Width in pixels
 ---@param height number Height in pixels
 ---@param img string|number Normal texture path or file ID
----@param pus string|number Pushed texture path or file ID
----@param opts? table Options: hlt, disabledTexture, OnClick, tooltip
+---@param opts? table Options: hlt, disabledTexture, OnClick, tooltip, pus
 ---@return Button btn The created image button
-function GUI:CreateImageButton (parent, width, height, img, pus, opts)
+function GUI:CreateImageButton (parent, width, height, img, opts)
   opts = opts or {}
   local btn, isNew = self.imgButtonPool:Acquire()
   if isNew then
@@ -397,8 +396,8 @@ function GUI:CreateImageButton (parent, width, height, img, pus, opts)
   end
   btn:SetParent(parent)
   btn:Show()
-  btn:SetNormalTexture (img)
-  btn:SetPushedTexture (pus)
+  btn:SetNormalTexture(img)
+  btn:SetPushedTexture(opts.pus or img)
   btn:SetHighlightTexture (opts.hlt or img)
   btn:SetSize(width, height)
   btn:SetScript ("OnClick", opts.OnClick)
