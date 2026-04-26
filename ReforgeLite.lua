@@ -1314,7 +1314,7 @@ function ReforgeLite:CreateOptionList ()
 
   self.pawnButton = GUI:CreatePanelButton (self.content, L["Import WoWSims/Pawn/QE"], function(btn) self:ImportData() end)
   self.statWeightsCategory:AddFrame (self.pawnButton)
-  self:SetAnchor (self.pawnButton, "LEFT", self.presetsButton, "RIGHT", 8, 0)
+  self:SetAnchor (self.pawnButton, "TOPLEFT", self.presetsButton, "BOTTOMLEFT", 0, -5)
 
   local levelList = function()
     return {
@@ -1328,10 +1328,10 @@ function ReforgeLite:CreateOptionList ()
   self.targetLevel = GUI:CreateDropdown(self.content, levelList, {
     default =  self.pdb.targetLevel,
     setter = function(_,val) self.pdb.targetLevel = val; self:UpdateItems() end,
-    width = 150,
+    width = 110,
   })
   self.statWeightsCategory:AddFrame(self.targetLevel)
-  self:SetAnchor(self.targetLevel, "TOPLEFT", self.presetsButton, "BOTTOMLEFT", 0, -5)
+  self:SetAnchor(self.targetLevel, "LEFT", self.presetsButton, "RIGHT", 8, 0)
   GUI:SetTooltip(self.targetLevel, function()
     local levels = levelList()
     for _, entry in ipairs(levels) do
@@ -1370,7 +1370,7 @@ function ReforgeLite:CreateOptionList ()
   end)
 
   self.statWeights = GUI:CreateTable (ceil (ITEM_STAT_COUNT / 2), 4)
-  self:SetAnchor (self.statWeights, "TOPLEFT", self.targetLevel, "BOTTOMLEFT", 0, -5)
+  self:SetAnchor (self.statWeights, "TOPLEFT", self.pawnButton, "BOTTOMLEFT", 0, -5)
   self.statWeightsCategory:AddFrame (self.statWeights)
   self.statWeights:SetRowHeight (ITEM_SIZE + 7)
   self.statWeights:SetColumnWidth(2, 61)
