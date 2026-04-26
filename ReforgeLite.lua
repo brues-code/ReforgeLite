@@ -1801,7 +1801,7 @@ local queueUpdateEvents = {
 
 function ReforgeLite:RegisterQueueUpdateEvents()
   for event, unitID in pairs(queueUpdateEvents) do
-    if not self:IsEventRegistered(event) then
+    if not self:IsEventRegistered(event) and C_EventUtils.IsEventValid(event) then
       if unitID == true then
         self:RegisterEvent(event)
       else
