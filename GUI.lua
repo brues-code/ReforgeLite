@@ -642,6 +642,7 @@ function GUI:CreateItemIcon(parent, slot, options)
 
     frame:GetNormalTexture():SetTexture(nil)
     frame.IconBorder:SetAllPoints(frame)
+    frame.lockTexture = frame.icon
 
     frame.lockOverlay = frame:CreateTexture(nil, "OVERLAY")
     frame.lockOverlay:SetAllPoints(frame)
