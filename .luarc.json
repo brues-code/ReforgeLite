@@ -223,7 +223,8 @@
     "Mixin",
     "HelpPlateTooltip",
     "SetClampedTextureRotation",
-    "MakeRecyclablePool"
+    "MakeRecyclablePool",
+    "SHOW"
   ],
   "diagnostics.disable": [
     "inject-field",

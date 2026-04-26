@@ -1716,35 +1716,51 @@ function ReforgeLite:UpdateMethodCategory()
     self.methodHelpButton = GUI:CreateHelpButton(self.content, L["The Result table shows the stat changes from the optimized reforge.\n\nThe left column shows your total stats after reforging.\n\nThe right column shows how much each stat changed:\n- Green: Stat increased and improved your weighted score\n- Red: Stat decreased and lowered your weighted score\n- Grey: No meaningful change (either unchanged, or changed but weighted score stayed the same)\n\nClick 'Show' to see a detailed breakdown of which items to reforge.\n\nClick 'Reset' to clear the current reforge plan."], { scale = 0.5 })
     self.methodHelpButton:SetPoint("LEFT", self.methodCategory.name, "RIGHT", 4, 0)
 
-    self.methodStats = GUI:CreateTable (ITEM_STAT_COUNT - 1, 2, ITEM_SIZE, 60, {0.5, 0.5, 0.5, 1})
-    self.methodCategory:AddFrame (self.methodStats)
-    self:SetAnchor (self.methodStats, "TOPLEFT", self.methodCategory, "BOTTOMLEFT", 0, -5)
-    self.methodStats:SetRowHeight (ITEM_SIZE + 2)
+    -- Table: col 0 = name (72px), col 1 = bar+value (auto), col 2 = delta (52px)
+    self.methodStats = GUI:CreateTable(ITEM_STAT_COUNT - 1, 2, ITEM_SIZE, 72, {0.5, 0.5, 0.5, 1})
+    self.methodCategory:AddFrame(self.methodStats)
+    self:SetAnchor(self.methodStats, "TOPLEFT", self.methodCategory, "BOTTOMLEFT", 0, -5)
+    self.methodStats:SetRowHeight(ITEM_SIZE + 2)
     self.methodStats:SetColumnWidth(46)
-    self.methodStats:EnableColumnAutoWidth(0, 1, 2)
+    self.methodStats:SetColumnWidth(2, 52)
+    self.methodStats:EnableColumnAutoWidth(1)
 
-    for i, v in ipairs (ITEM_STATS) do
+    self.methodStats.bars = {}
+    for i, v in ipairs(ITEM_STATS) do
       local cell = i - 1
-      self.methodStats:SetCellText(cell, 0, v.long, "LEFT")
-      self.methodStats:SetCellText(cell, 1, "0")
-      self.methodStats:SetCellText(cell, 2, "0", nil, addonTable.COLORS.grey)
+      local c = STAT_COLORS[v.statId]
+      local color = c and CreateColor(c[1], c[2], c[3]) or addonTable.COLORS.white
+      self.methodStats:SetCellText(cell, 0, v.long, "LEFT", color)
+      self.methodStats:SetCellText(cell, 1, "0", "RIGHT")
+      self.methodStats:SetCellText(cell, 2, "0", "RIGHT", addonTable.COLORS.grey)
+      local track = self.methodStats:CreateTexture(nil, "BACKGROUND")
+      track:SetColorTexture(0.08, 0.10, 0.14)
+      track:SetHeight(5)
+      local fill = self.methodStats:CreateTexture(nil, "ARTWORK")
+      fill:SetColorTexture(c and c[1] or 0.5, c and c[2] or 0.5, c and c[3] or 0.5, 0.75)
+      fill:SetHeight(5)
+      self.methodStats.bars[i] = { track = track, fill = fill, row = cell }
+    end
+
+    self.methodStats.OnUpdate = function()
+      self:RefreshMethodStatBars(true)
     end
 
     self.expertiseToHitHelpButton = GUI:CreateHelpButton(self.methodStats, L["Your Expertise rating is being converted to spell hit.\n\nIn Mists of Pandaria, casters benefit from Expertise due to it automatically converting to Hit at a 1:1 ratio.\n\nThe Hit value shown above includes this converted Expertise rating.\n\nNote: The character sheet is bugged and doesn't show Expertise converted to spell hit, but the conversion works correctly in combat."], { scale = 0.45 })
     self.expertiseToHitHelpButton:SetPoint("LEFT", self.methodStats.cells[statIds.EXP - 1][0], "RIGHT", -8, 0)
     self.expertiseToHitHelpButton:Hide()
 
-    self.methodShow = GUI:CreatePanelButton (self.content, SHOW, function(btn) self:ShowMethodWindow() end)
+    self.methodShow = GUI:CreatePanelButton(self.content, SHOW, function(btn) self:ShowMethodWindow() end)
     self.methodShow:SetSize(85, 22)
-    self.methodCategory:AddFrame (self.methodShow)
-    self:SetAnchor (self.methodShow, "TOPLEFT", self.methodStats, "BOTTOMLEFT", 0, -5)
+    self.methodCategory:AddFrame(self.methodShow)
+    self:SetAnchor(self.methodShow, "TOPLEFT", self.methodStats, "BOTTOMLEFT", 0, -5)
 
-    self.methodReset = GUI:CreatePanelButton (self.content, RESET, function(btn) self:ResetMethod() end)
+    self.methodReset = GUI:CreatePanelButton(self.content, RESET, function(btn) self:ResetMethod() end)
     self.methodReset:SetSize(85, 22)
-    self.methodCategory:AddFrame (self.methodReset)
-    self:SetAnchor (self.methodReset, "BOTTOMLEFT", self.methodShow, "BOTTOMRIGHT", 8, 0)
+    self.methodCategory:AddFrame(self.methodReset)
+    self:SetAnchor(self.methodReset, "BOTTOMLEFT", self.methodShow, "BOTTOMRIGHT", 8, 0)
 
-    self:SetAnchor (self.settingsCategory, "TOPLEFT", self.methodShow, "BOTTOMLEFT", 0, -10)
+    self:SetAnchor(self.settingsCategory, "TOPLEFT", self.methodShow, "BOTTOMLEFT", 0, -10)
   end
 
   self:RefreshMethodStats()
@@ -1763,25 +1779,78 @@ function ReforgeLite:RefreshMethodStats()
       local anyExpanded = false
       for statId, v in ipairs(ITEM_STATS) do
         local cell = statId - 1
-        local mvalue = v.mgetter (self.pdb.method)
-        self.methodStats:SetCellText(cell, 1, BreakUpLargeNumbers(mvalue))
+        local mvalue = v.mgetter(self.pdb.method)
+        self.methodStats:SetCellText(cell, 1, BreakUpLargeNumbers(mvalue), "RIGHT")
         local override
-        mvalue = v.mgetter (self.pdb.method, true)
-        local value = v.getter ()
-        if self:GetStatScore (statId, mvalue) == self:GetStatScore (statId, value) then
+        mvalue = v.mgetter(self.pdb.method, true)
+        local value = v.getter()
+        if self:GetStatScore(statId, mvalue) == self:GetStatScore(statId, value) then
           override = 0
         end
-        self.methodStats:SetCellText(cell, 2, FormatNumber(mvalue - value), nil, GetTextDelta(mvalue, value, override))
+        self.methodStats:SetCellText(cell, 2, FormatNumber(mvalue - value), "RIGHT", GetTextDelta(mvalue, value, override))
         local expanded = mvalue > 0 and (statId ~= statIds.SPIRIT or showSpirit)
         self.methodStats:SetRowExpanded(cell, expanded)
         anyExpanded = anyExpanded or expanded
       end
+      self:RefreshMethodStatBars()
       if not anyExpanded then
         for statId = 1, ITEM_STAT_COUNT do
           self.methodStats:SetRowExpanded(statId - 1, statId ~= statIds.SPIRIT or showSpirit)
         end
       end
     end
+  end
+end
+
+function ReforgeLite:RefreshMethodStatBars(instant)
+  local t = self.methodStats
+  if not t or not t.bars or not self.pdb.method then return end
+  local maxV = 0
+  for _, v in ipairs(ITEM_STATS) do
+    local val = v.mgetter(self.pdb.method)
+    if val > maxV then maxV = val end
+  end
+  local PAD = 4
+  for i, bar in ipairs(t.bars) do
+    local x1 = t:GetCellX(0) + PAD
+    local x2 = t:GetCellX(1) - PAD
+    local trackW = x2 - x1
+    local rowBot = t:GetCellY(bar.row)
+    bar.track:ClearAllPoints()
+    bar.track:SetPoint("BOTTOMLEFT", t, "TOPLEFT", x1, rowBot + 2)
+    local val = ITEM_STATS[i].mgetter(self.pdb.method)
+    bar.targetW = maxV > 0 and (val / maxV * trackW) or 0
+    bar.track:SetWidth(trackW)
+    bar.track:SetShown(bar.targetW > 0)
+    if instant or bar.currentW == nil then
+      bar.currentW = bar.targetW
+    end
+    bar.fill:ClearAllPoints()
+    bar.fill:SetPoint("BOTTOMLEFT", t, "TOPLEFT", x1, rowBot + 2)
+  end
+  if not t.animating then
+    t.animating = true
+    t:SetScript("OnUpdate", function(frame, elapsed)
+      local allDone = true
+      for _, bar in ipairs(frame.bars) do
+        if abs(bar.currentW - bar.targetW) > 0.5 then
+          bar.currentW = bar.currentW + (bar.targetW - bar.currentW) * min(elapsed * 12, 1)
+          allDone = false
+        else
+          bar.currentW = bar.targetW
+        end
+        if bar.currentW > 1 then
+          bar.fill:SetWidth(bar.currentW)
+          bar.fill:Show()
+        else
+          bar.fill:Hide()
+        end
+      end
+      if allDone then
+        frame:SetScript("OnUpdate", nil)
+        frame.animating = false
+      end
+    end)
   end
 end
 

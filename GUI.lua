@@ -1160,7 +1160,7 @@ function GUI:CreateTable (rows, cols, firstRow, firstColumn, gridColor, parent)
     self.collapsedRows[i] = self.rowHeight[i]
     self.rowHeight[i] = 0
     for j = 0, self.cols do
-      self.cells[i][j]:SetAlpha(0)
+      if self.cells[i][j] then self.cells[i][j]:SetAlpha(0) end
     end
     self:OnUpdateFix()
   end
@@ -1169,7 +1169,7 @@ function GUI:CreateTable (rows, cols, firstRow, firstColumn, gridColor, parent)
       self.rowHeight[i] = self.collapsedRows[i]
       self.collapsedRows[i] = nil
       for j = 0, self.cols do
-        self.cells[i][j]:SetAlpha(1)
+        if self.cells[i][j] then self.cells[i][j]:SetAlpha(1) end
       end
       self:OnUpdateFix()
     end
