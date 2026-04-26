@@ -239,8 +239,6 @@ GUI.filterDropdownPool = MakeRecyclablePool("DropdownButton", UIParent, "WowStyl
   function(_, dropdown)
     dropdown:Hide()
     dropdown:ClearAllPoints()
-    dropdown:SetScript("OnEnter", nil)
-    dropdown:SetScript("OnLeave", nil)
     dropdown.resizeToTextPadding = dropdown.defaultResizeToTextPadding
     dropdown:SetParent(UIParent)
   end
@@ -248,7 +246,7 @@ GUI.filterDropdownPool = MakeRecyclablePool("DropdownButton", UIParent, "WowStyl
 ---Creates a WowStyle1FilterDropdownTemplate button with recycling support
 ---@param parent Frame Parent frame
 ---@param text string Button text
----@param options? table Options: resizeToTextPadding (number), tooltip (string)
+---@param options? table Options: resizeToTextPadding (number)
 ---@return DropdownButton dropdown The created filter dropdown
 function GUI:CreateFilterDropdown (parent, text, options)
   options = options or {}
@@ -264,7 +262,6 @@ function GUI:CreateFilterDropdown (parent, text, options)
     dropdown.resizeToTextPadding = options.resizeToTextPadding
   end
   dropdown:SetText(text)
-  self:SetTooltip(dropdown, options.tooltip)
   return dropdown
 end
 
