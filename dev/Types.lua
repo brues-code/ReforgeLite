@@ -42,6 +42,15 @@
 ---@field darkyellow ColorMixin DARKYELLOW_FONT_COLOR (1, 0.820, 0) - Headers/labels
 ---@field normal ColorMixin NORMAL_FONT_COLOR (1, 0.820, 0) - Normal tooltip text
 ---@field maroon ColorMixin Custom red (0.6, 0, 0) - Active window
+---@field charcoal ColorMixin (0.08, 0.10, 0.14) - Stat bar track background
+---@field powder ColorMixin (0.49, 0.78, 0.89) - Spirit stat bar
+---@field teal ColorMixin (0.00, 0.80, 0.53) - Dodge stat bar
+---@field skyblue ColorMixin (0.27, 0.53, 1.00) - Parry stat bar
+---@field yellow ColorMixin (1.00, 0.84, 0.00) - Hit stat bar
+---@field crimson ColorMixin (1.00, 0.27, 0.27) - Crit stat bar
+---@field jade ColorMixin (0.27, 0.93, 0.47) - Haste stat bar
+---@field amber ColorMixin (1.00, 0.53, 0.00) - Expertise stat bar
+---@field violet ColorMixin (0.80, 0.33, 1.00) - Mastery stat bar
 
 ---Spec ID definitions by class
 ---@class DeathKnightSpecs

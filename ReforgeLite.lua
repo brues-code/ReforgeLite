@@ -251,7 +251,7 @@ local ITEM_STATS = {
     },
     Stat {
       statId = statIds.HIT,
-      color = addonTable.COLORS.gold,
+      color = addonTable.COLORS.yellow,
       name = "ITEM_MOD_HIT_RATING",
       tooltipConstant = "ITEM_MOD_HIT_RATING_SHORT",
       tip = HIT,
