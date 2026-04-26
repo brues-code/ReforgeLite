@@ -1818,7 +1818,8 @@ function ReforgeLite:RefreshMethodStatBars(instant)
     bar.track:ClearAllPoints()
     bar.track:SetPoint("BOTTOMLEFT", t, "TOPLEFT", x1, rowBot + 2)
     local val = ITEM_STATS[i].mgetter(self.pdb.method)
-    bar.targetW = maxV > 0 and (val / maxV * trackW) or 0
+    local isCollapsed = t.collapsedRows and t.collapsedRows[bar.row]
+    bar.targetW = (maxV > 0 and not isCollapsed) and (val / maxV * trackW) or 0
     bar.track:SetWidth(trackW)
     bar.track:SetShown(bar.targetW > 0)
     if instant or bar.currentW == nil then
