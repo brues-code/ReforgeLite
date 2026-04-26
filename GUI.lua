@@ -34,6 +34,15 @@ addonTable.COLORS = {
   panel = PANEL_BACKGROUND_COLOR,
   red = CreateColor(1, 0.4, 0.4),
   white = WHITE_FONT_COLOR,
+  charcoal = CreateColor(0.08, 0.10, 0.14),
+  powder  = CreateColor(0.49, 0.78, 0.89),
+  teal    = CreateColor(0.00, 0.80, 0.53),
+  skyblue = CreateColor(0.27, 0.53, 1.00),
+  gold    = CreateColor(1.00, 0.84, 0.00),
+  crimson = CreateColor(1.00, 0.27, 0.27),
+  jade    = CreateColor(0.27, 0.93, 0.47),
+  amber   = CreateColor(1.00, 0.53, 0.00),
+  violet  = CreateColor(0.80, 0.33, 1.00),
 }
 
 ---Clears focus from all edit boxes

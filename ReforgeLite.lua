@@ -188,6 +188,7 @@ local StatAdditives = {
 local function Stat(options)
   return {
     statId = options.statId,
+    color = options.color,
     name = options.name,
     tooltipConstant = options.tooltipConstant,
     tip = options.tip,
@@ -218,6 +219,7 @@ end
 local ITEM_STATS = {
     Stat {
       statId = statIds.SPIRIT,
+      color = addonTable.COLORS.powder,
       name = "ITEM_MOD_SPIRIT_SHORT",
       tip = SPELL_STAT5_NAME,
       long = ITEM_MOD_SPIRIT_SHORT,
@@ -231,6 +233,7 @@ local ITEM_STATS = {
     },
     Stat {
       statId = statIds.DODGE,
+      color = addonTable.COLORS.teal,
       name = "ITEM_MOD_DODGE_RATING",
       tooltipConstant = "ITEM_MOD_DODGE_RATING_SHORT",
       tip = STAT_DODGE,
@@ -239,6 +242,7 @@ local ITEM_STATS = {
     },
     Stat {
       statId = statIds.PARRY,
+      color = addonTable.COLORS.skyblue,
       name = "ITEM_MOD_PARRY_RATING",
       tooltipConstant = "ITEM_MOD_PARRY_RATING_SHORT",
       tip = STAT_PARRY,
@@ -247,6 +251,7 @@ local ITEM_STATS = {
     },
     Stat {
       statId = statIds.HIT,
+      color = addonTable.COLORS.gold,
       name = "ITEM_MOD_HIT_RATING",
       tooltipConstant = "ITEM_MOD_HIT_RATING_SHORT",
       tip = HIT,
@@ -261,6 +266,7 @@ local ITEM_STATS = {
     },
     Stat {
       statId = statIds.CRIT,
+      color = addonTable.COLORS.crimson,
       name = "ITEM_MOD_CRIT_RATING",
       tooltipConstant = "ITEM_MOD_CRIT_RATING_SHORT",
       tip = CRIT_ABBR,
@@ -269,6 +275,7 @@ local ITEM_STATS = {
     },
     Stat {
       statId = statIds.HASTE,
+      color = addonTable.COLORS.jade,
       name = "ITEM_MOD_HASTE_RATING",
       tooltipConstant = "ITEM_MOD_HASTE_RATING_SHORT",
       tip = STAT_HASTE,
@@ -277,6 +284,7 @@ local ITEM_STATS = {
     },
     Stat {
       statId = statIds.EXP,
+      color = addonTable.COLORS.amber,
       name = "ITEM_MOD_EXPERTISE_RATING",
       tooltipConstant = "ITEM_MOD_EXPERTISE_RATING_SHORT",
       tip = EXPERTISE_ABBR,
@@ -285,6 +293,7 @@ local ITEM_STATS = {
     },
     Stat {
       statId = statIds.MASTERY,
+      color = addonTable.COLORS.violet,
       name = "ITEM_MOD_MASTERY_RATING_SHORT",
       tip = STAT_MASTERY,
       long = STAT_MASTERY,
@@ -295,16 +304,6 @@ local ITEM_STAT_COUNT = #ITEM_STATS
 addonTable.itemStats, addonTable.itemStatCount = ITEM_STATS, ITEM_STAT_COUNT
 ReforgeLite.itemStats = ITEM_STATS
 
-local STAT_COLORS = {
-  [statIds.SPIRIT]  = {0.58, 0.65, 0.67},
-  [statIds.DODGE]   = {0.10, 0.74, 0.61},
-  [statIds.PARRY]   = {0.20, 0.60, 0.86},
-  [statIds.HIT]     = {0.29, 0.56, 0.89},
-  [statIds.CRIT]    = {0.91, 0.30, 0.24},
-  [statIds.HASTE]   = {0.18, 0.80, 0.44},
-  [statIds.EXP]     = {0.90, 0.49, 0.13},
-  [statIds.MASTERY] = {0.61, 0.35, 0.71},
-}
 
 local REFORGE_TABLE_BASE = 112
 
@@ -1272,12 +1271,11 @@ function ReforgeLite:UpdateStatWeightList ()
     })
     self.statWeights:SetCell (row, col + 1, self.statWeights.inputs[i])
 
-    local c = STAT_COLORS[v.statId]
     local track = self.statWeights:CreateTexture(nil, "BACKGROUND")
-    track:SetColorTexture(0.08, 0.10, 0.14)
+    track:SetColorTexture(addonTable.COLORS.charcoal:GetRGB())
     track:SetHeight(3)
     local fill = self.statWeights:CreateTexture(nil, "ARTWORK")
-    fill:SetColorTexture(c[1], c[2], c[3], 0.85)
+    fill:SetColorTexture(v.color.r, v.color.g, v.color.b, 0.85)
     fill:SetHeight(3)
     self.statWeights.bars[i] = {
       track  = track,
@@ -1717,15 +1715,14 @@ function ReforgeLite:UpdateMethodCategory()
     self.methodStats.bars = {}
     for i, v in ipairs(ITEM_STATS) do
       local cell = i - 1
-      local c = STAT_COLORS[v.statId]
       self.methodStats:SetCellText(cell, 0, v.long, "LEFT")
       self.methodStats:SetCellText(cell, 1, "0", "RIGHT")
       self.methodStats:SetCellText(cell, 2, "0", "RIGHT", addonTable.COLORS.grey)
       local track = self.methodStats:CreateTexture(nil, "BACKGROUND")
-      track:SetColorTexture(0.08, 0.10, 0.14)
+      track:SetColorTexture(addonTable.COLORS.charcoal:GetRGB())
       track:SetHeight(5)
       local fill = self.methodStats:CreateTexture(nil, "ARTWORK")
-      fill:SetColorTexture(c and c[1] or 0.5, c and c[2] or 0.5, c and c[3] or 0.5, 0.75)
+      fill:SetColorTexture(v.color.r, v.color.g, v.color.b, 0.75)
       fill:SetHeight(5)
       self.methodStats.bars[i] = { track = track, fill = fill, row = cell }
     end
