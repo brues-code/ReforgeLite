@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReforgeLite UI Mockup</title>
+<style>
+  :root {
+    --bg-deep:     #0d0f12;
+    --bg-panel:    #161a1f;
+    --bg-card:     #1e2329;
+    --bg-input:    #252b33;
+    --border:      #2e3540;
+    --border-hi:   #3d4a5c;
+    --gold:        #c8a84b;
+    --gold-dim:    #8a7030;
+    --red:         #c0392b;
+    --red-dim:     #7a2520;
+    --text-hi:     #e8dcc8;
+    --text-mid:    #9aa3af;
+    --text-dim:    #5a6370;
+    --hit:         #4a90e2;
+    --exp:         #e67e22;
+    --crit:        #e74c3c;
+    --haste:       #2ecc71;
+    --mastery:     #9b59b6;
+    --dodge:       #1abc9c;
+    --parry:       #3498db;
+    --spirit:      #95a5a6;
+    --cap-met:     #27ae60;
+    --cap-close:   #f39c12;
+    --cap-miss:    #e74c3c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-hi);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+    gap: 16px;
+  }
+
+  /* ── Panel shell ─────────────────────────────────────── */
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 340px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #1a1f27 0%, #131720 100%);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .panel-title svg { opacity: 0.7; }
+
+  .panel-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* ── Buttons ─────────────────────────────────────────── */
+  .btn {
+    border: none;
+    border-radius: 4px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.1s;
+    letter-spacing: 0.02em;
+  }
+  .btn:hover { filter: brightness(1.15); }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #b8942f, #8a6e22);
+    color: #fff8e8;
+    border: 1px solid #c8a84b44;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-mid);
+    border: 1px solid var(--border-hi);
+  }
+  .btn-ghost:hover { color: var(--text-hi); border-color: var(--gold-dim); }
+  .btn-red {
+    background: linear-gradient(135deg, #c0392b, #922b21);
+    color: #fff;
+    border: 1px solid #e74c3c44;
+  }
+  .btn-green {
+    background: linear-gradient(135deg, #1e8449, #145a32);
+    color: #fff;
+    border: 1px solid #27ae6044;
+  }
+  .btn-sm { padding: 3px 8px; font-size: 11px; }
+  .btn-icon {
+    background: transparent;
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--text-dim);
+    transition: color 0.15s, border-color 0.15s;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .btn-icon:hover { color: var(--gold); border-color: var(--gold-dim); }
+
+  /* ── Top toolbar ─────────────────────────────────────── */
+  .toolbar {
+    display: flex;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .toolbar-sep { flex: 1; }
+
+  .select-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .select-wrap select {
+    appearance: none;
+    background: var(--bg-input);
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    color: var(--text-hi);
+    font-size: 12px;
+    padding: 4px 22px 4px 8px;
+    cursor: pointer;
+    outline: none;
+  }
+  .select-wrap select:focus { border-color: var(--gold-dim); }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 7px;
+    color: var(--text-dim);
+    pointer-events: none;
+    font-size: 10px;
+  }
+
+  /* ── Stat weights grid ───────────────────────────────── */
+  .section { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 9px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+  .stat-card:hover { border-color: var(--border-hi); }
+  .stat-card.active { border-color: var(--stat-color, var(--gold-dim)); }
+
+  .stat-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--stat-color, var(--text-dim));
+    flex-shrink: 0;
+  }
+
+  .stat-name {
+    flex: 1;
+    font-size: 11px;
+    color: var(--text-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+
+  .stat-input {
+    background: var(--bg-input);
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: var(--text-hi);
+    font-size: 13px;
+    font-weight: 700;
+    width: 42px;
+    text-align: right;
+    padding: 1px 4px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .stat-input:focus { border-color: var(--stat-color, var(--gold-dim)); }
+  .stat-input.zero { color: var(--text-dim); }
+
+  /* ── Stat weight bar ─────────────────────────────────── */
+  .stat-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3px;
+  }
+  .stat-bar-track {
+    flex: 1;
+    height: 3px;
+    background: var(--bg-input);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--stat-color, var(--gold));
+    transition: width 0.3s ease;
+  }
+
+  /* ── Caps section ────────────────────────────────────── */
+  .cap-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .cap-row:last-child { margin-bottom: 0; }
+
+  .cap-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cap-stat-badge {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--stat-color);
+    background: color-mix(in srgb, var(--stat-color) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--stat-color) 30%, transparent);
+    border-radius: 3px;
+    padding: 2px 7px;
+  }
+
+  .cap-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+  }
+
+  .cap-controls select {
+    appearance: none;
+    background: var(--bg-input);
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    color: var(--text-mid);
+    font-size: 11px;
+    padding: 3px 20px 3px 7px;
+    cursor: pointer;
+    outline: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='4'%3E%3Cpath d='M0 0l4 4 4-4z' fill='%235a6370'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+  }
+
+  .cap-value-input {
+    background: var(--bg-input);
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    color: var(--text-hi);
+    font-size: 12px;
+    font-weight: 600;
+    width: 58px;
+    text-align: right;
+    padding: 3px 6px;
+    outline: none;
+  }
+  .cap-value-input:focus { border-color: var(--stat-color); }
+
+  .cap-progress {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 2px;
+  }
+  .cap-track {
+    flex: 1;
+    height: 5px;
+    background: var(--bg-input);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .cap-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease, background 0.3s;
+  }
+  .cap-status {
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  /* ── Compute bar ─────────────────────────────────────── */
+  .compute-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .algo-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    cursor: pointer;
+    color: var(--text-mid);
+    font-size: 11px;
+  }
+  .algo-toggle input[type=checkbox] { accent-color: var(--gold); cursor: pointer; }
+  .algo-toggle:hover { color: var(--text-hi); }
+
+  /* ── Results ─────────────────────────────────────────── */
+  .result-list { padding: 10px 14px; }
+
+  .result-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 5px 0;
+    border-bottom: 1px solid #1a1f27;
+  }
+  .result-row:last-child { border-bottom: none; }
+
+  .result-stat {
+    width: 72px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--stat-color);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .result-stat::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--stat-color);
+    flex-shrink: 0;
+  }
+
+  .result-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .result-track {
+    height: 8px;
+    background: var(--bg-input);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .result-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--stat-color);
+    opacity: 0.75;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .result-cap-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 1px;
+  }
+
+  .result-value {
+    width: 54px;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-hi);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .result-delta {
+    width: 36px;
+    text-align: right;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .result-delta.pos { color: var(--cap-met); }
+  .result-delta.neg { color: var(--cap-miss); }
+  .result-delta.zero { color: var(--text-dim); }
+
+  .result-cap-badge {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    padding: 1px 5px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .cap-met-badge { background: #1e4d31; color: #4ade80; border: 1px solid #27ae6055; }
+  .cap-miss-badge { background: #4d1e1e; color: #f87171; border: 1px solid #e74c3c55; }
+
+  .result-footer {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .score-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 12px;
+    margin: 0 14px 12px;
+    background: var(--bg-card);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .score-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); }
+  .score-value { font-size: 18px; font-weight: 800; color: var(--gold); letter-spacing: 0.02em; }
+  .score-change { font-size: 11px; color: var(--cap-met); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="panel">
+
+  <!-- ── Panel header ── -->
+  <div class="panel-header">
+    <div class="panel-title">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2L10 6H14L11 9L12 13L8 11L4 13L5 9L2 6H6L8 2Z" fill="currentColor" opacity="0.85"/>
+      </svg>
+      ReforgeLite
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-ghost btn-sm">Presets ▾</button>
+      <button class="btn btn-ghost btn-sm">Buffs ▾</button>
+    </div>
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar">
+    <div class="select-wrap">
+      <select>
+        <option>⚔ Raid (+3)</option>
+        <option>Dungeon (+0)</option>
+        <option>PvP</option>
+      </select>
+    </div>
+    <div class="toolbar-sep"></div>
+    <button class="btn btn-ghost btn-sm">Import WoWSims / Pawn</button>
+  </div>
+
+  <!-- ── Stat weights ── -->
+  <div class="section">
+    <div class="section-label">Stat Weights</div>
+    <div class="stat-grid" id="statGrid"></div>
+  </div>
+
+  <!-- ── Caps ── -->
+  <div class="section">
+    <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;">
+      Caps
+      <button class="btn-icon" title="Add cap">+</button>
+    </div>
+    <div id="capsContainer"></div>
+  </div>
+
+  <!-- ── Compute ── -->
+  <div class="compute-bar">
+    <button class="btn btn-green" style="min-width:88px;" id="computeBtn">Compute</button>
+    <button class="btn btn-ghost" id="pauseBtn" disabled>Pause</button>
+    <label class="algo-toggle">
+      <input type="checkbox" id="bbToggle">
+      Branch &amp; Bound
+    </label>
+  </div>
+
+</div>
+
+<!-- ── Results panel ── -->
+<div class="panel">
+
+  <div class="panel-header">
+    <div class="panel-title">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="8" width="3" height="7" rx="1" fill="currentColor"/>
+        <rect x="6" y="5" width="3" height="10" rx="1" fill="currentColor"/>
+        <rect x="11" y="2" width="3" height="13" rx="1" fill="currentColor"/>
+      </svg>
+      Result
+    </div>
+    <button class="btn-icon" title="Info">?</button>
+  </div>
+
+  <!-- score summary -->
+  <div class="score-bar">
+    <div>
+      <div class="score-label">Optimization Score</div>
+      <div class="score-value" id="scoreValue">—</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="score-label">vs. current</div>
+      <div class="score-change" id="scoreDelta">—</div>
+    </div>
+  </div>
+
+  <div class="result-list" id="resultList"></div>
+
+  <div class="result-footer">
+    <button class="btn btn-gold" style="flex:1;" id="showBtn" disabled>Show on Items</button>
+    <button class="btn btn-ghost" id="resetBtn" disabled>Reset</button>
+  </div>
+
+</div>
+
+<script>
+const STATS = [
+  { id: 'hit',       label: 'Hit',       color: 'var(--hit)',     weight: 73,  result: 3743, cap: 2550, capType: 'atleast', capLabel: 'Melee hit cap' },
+  { id: 'exp',       label: 'Expertise', color: 'var(--exp)',     weight: 73,  result: 2684, cap: 2550, capType: 'atleast', capLabel: 'Expertise soft cap' },
+  { id: 'crit',      label: 'Crit',      color: 'var(--crit)',    weight: 47,  result: 12491 },
+  { id: 'haste',     label: 'Haste',     color: 'var(--haste)',   weight: 43,  result: 7291 },
+  { id: 'mastery',   label: 'Mastery',   color: 'var(--mastery)', weight: 40,  result: 4143 },
+  { id: 'dodge',     label: 'Dodge',     color: 'var(--dodge)',   weight: 0,   result: 480 },
+  { id: 'parry',     label: 'Parry',     color: 'var(--parry)',   weight: 0,   result: 0 },
+  { id: 'spirit',    label: 'Spirit',    color: 'var(--spirit)',  weight: 0,   result: 0 },
+];
+
+const maxWeight = Math.max(...STATS.map(s => s.weight));
+const maxResult = Math.max(...STATS.map(s => s.result));
+
+// ── Stat weights grid ──────────────────────────────────────────────
+const grid = document.getElementById('statGrid');
+STATS.forEach(stat => {
+  const isZero = stat.weight === 0;
+  const card = document.createElement('div');
+  card.className = 'stat-card' + (stat.weight > 0 ? ' active' : '');
+  card.style.setProperty('--stat-color', stat.color);
+
+  const pct = maxWeight > 0 ? (stat.weight / maxWeight) * 100 : 0;
+
+  card.innerHTML = `
+    <div class="stat-dot"></div>
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:4px">
+        <span class="stat-name">${stat.label}</span>
+        <input class="stat-input${isZero ? ' zero' : ''}" value="${stat.weight}" type="number" min="0" step="1">
+      </div>
+      <div class="stat-bar-row">
+        <div class="stat-bar-track">
+          <div class="stat-bar-fill" style="width:${pct}%"></div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // live bar update
+  const inp = card.querySelector('input');
+  const fill = card.querySelector('.stat-bar-fill');
+  inp.addEventListener('input', () => {
+    const v = Math.max(0, parseFloat(inp.value) || 0);
+    const allInputs = document.querySelectorAll('.stat-input');
+    const mx = Math.max(...[...allInputs].map(i => parseFloat(i.value)||0));
+    document.querySelectorAll('.stat-bar-fill').forEach((f, idx) => {
+      const iv = parseFloat(allInputs[idx]?.value) || 0;
+      f.style.width = mx > 0 ? (iv/mx*100)+'%' : '0%';
+    });
+    inp.classList.toggle('zero', v === 0);
+    card.classList.toggle('active', v > 0);
+  });
+
+  grid.appendChild(card);
+});
+
+// ── Caps ────────────────────────────────────────────────────────────
+const capsContainer = document.getElementById('capsContainer');
+const cappedStats = STATS.filter(s => s.cap !== undefined);
+
+cappedStats.forEach(stat => {
+  const current = stat.result;
+  const cap = stat.cap;
+  const pct = Math.min((current / cap) * 100, 100);
+  const over = current >= cap;
+  const fillColor = over ? 'var(--cap-met)' : pct > 80 ? 'var(--cap-close)' : 'var(--cap-miss)';
+  const statusColor = over ? 'var(--cap-met)' : 'var(--cap-miss)';
+  const statusText = over ? `+${(current-cap).toLocaleString()} over` : `${(cap-current).toLocaleString()} short`;
+
+  const row = document.createElement('div');
+  row.className = 'cap-row';
+  row.innerHTML = `
+    <div class="cap-header">
+      <span class="cap-stat-badge" style="--stat-color:${stat.color}">${stat.label}</span>
+      <div class="cap-controls" style="--stat-color:${stat.color}">
+        <select>
+          <option ${stat.capType==='atleast'?'selected':''}>At least</option>
+          <option ${stat.capType==='atmost'?'selected':''}>At most</option>
+          <option>Exactly</option>
+        </select>
+        <select style="flex:1">
+          <option>${stat.capLabel}</option>
+          <option>Custom</option>
+        </select>
+        <input class="cap-value-input" style="--stat-color:${stat.color}" value="${cap.toLocaleString()}" type="number">
+      </div>
+      <button class="btn-icon" title="Remove cap" style="color:var(--red-dim)">✕</button>
+    </div>
+  `;
+  capsContainer.appendChild(row);
+});
+
+// ── Results ─────────────────────────────────────────────────────────
+const resultList  = document.getElementById('resultList');
+const showResults = STATS.filter(s => s.result > 0);
+
+showResults.forEach(stat => {
+  const pct = maxResult > 0 ? (stat.result / maxResult) * 100 : 0;
+  const capPct = stat.cap ? Math.min((stat.cap / maxResult) * 100, 100) : null;
+  const over = stat.cap && stat.result >= stat.cap;
+
+  const row = document.createElement('div');
+  row.className = 'result-row';
+  row.style.setProperty('--stat-color', stat.color);
+
+  row.innerHTML = `
+    <div class="result-stat">${stat.label}</div>
+    <div class="result-bar-wrap">
+      <div class="result-track">
+        <div class="result-fill" style="width:${pct}%;background:${stat.color}"></div>
+        ${capPct !== null ? `<div class="result-cap-line" style="left:${capPct}%"></div>` : ''}
+      </div>
+    </div>
+    <div class="result-value">${stat.result.toLocaleString()}</div>
+    ${stat.cap ? `<span class="result-cap-badge ${over ? 'cap-met-badge' : 'cap-miss-badge'}">${over ? 'CAP ✓' : 'CAP ✗'}</span>` : '<span style="width:44px"></span>'}
+  `;
+  resultList.appendChild(row);
+});
+
+// ── Compute simulation ───────────────────────────────────────────────
+let computing = false;
+const computeBtn = document.getElementById('computeBtn');
+const pauseBtn   = document.getElementById('pauseBtn');
+const showBtn    = document.getElementById('showBtn');
+const resetBtn   = document.getElementById('resetBtn');
+const scoreValue = document.getElementById('scoreValue');
+const scoreDelta = document.getElementById('scoreDelta');
+
+computeBtn.addEventListener('click', () => {
+  computing = !computing;
+  if (computing) {
+    computeBtn.textContent = 'Computing…';
+    computeBtn.className = 'btn btn-ghost';
+    pauseBtn.disabled = false;
+    let t = 0;
+    const iv = setInterval(() => {
+      t++;
+      if (t >= 30) {
+        clearInterval(iv);
+        computing = false;
+        computeBtn.textContent = 'Recompute';
+        computeBtn.className = 'btn btn-green';
+        pauseBtn.disabled = true;
+        showBtn.disabled = false;
+        resetBtn.disabled = false;
+        scoreValue.textContent = '2,847.4';
+        scoreDelta.textContent = '+312.1 (12.3%)';
+      }
+    }, 100);
+  }
+});
+</script>
+</body>
+</html>

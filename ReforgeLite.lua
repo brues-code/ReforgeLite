@@ -187,6 +187,7 @@ local StatAdditives = {
 
 local function Stat(options)
   return {
+    statId = options.statId,
     name = options.name,
     tooltipConstant = options.tooltipConstant,
     tip = options.tip,
@@ -293,6 +294,17 @@ local ITEM_STATS = {
 local ITEM_STAT_COUNT = #ITEM_STATS
 addonTable.itemStats, addonTable.itemStatCount = ITEM_STATS, ITEM_STAT_COUNT
 ReforgeLite.itemStats = ITEM_STATS
+
+local STAT_COLORS = {
+  [statIds.SPIRIT]  = {0.58, 0.65, 0.67},
+  [statIds.DODGE]   = {0.10, 0.74, 0.61},
+  [statIds.PARRY]   = {0.20, 0.60, 0.86},
+  [statIds.HIT]     = {0.29, 0.56, 0.89},
+  [statIds.CRIT]    = {0.91, 0.30, 0.24},
+  [statIds.HASTE]   = {0.18, 0.80, 0.44},
+  [statIds.EXP]     = {0.90, 0.49, 0.13},
+  [statIds.MASTERY] = {0.61, 0.35, 0.71},
+}
 
 local REFORGE_TABLE_BASE = 112
 
@@ -1123,6 +1135,7 @@ function ReforgeLite:SetStatWeights (weights, caps)
         self.statWeights.inputs[i]:SetText (self.pdb.weights[i])
       end
     end
+    self:RefreshStatWeightBars()
   end
   if caps then
     for i = 1, 2 do
@@ -1167,10 +1180,77 @@ function ReforgeLite:CapUpdater()
     self:UpdateCapPoints(i)
   end
 end
+function ReforgeLite:RefreshStatWeightBars(instant)
+  local t = self.statWeights
+  if not t or not t.bars then return end
+  local maxW = 0
+  for i in ipairs(ITEM_STATS) do
+    local w = self.pdb.weights[i] or 0
+    if w > maxW then maxW = w end
+  end
+  local PAD = 4
+  for i, bar in ipairs(t.bars) do
+    local x1 = t:GetCellX(bar.colL) + PAD
+    local x2 = t:GetCellX(bar.colR) - PAD
+    local y  = t:GetCellY(bar.row) + 2
+    local trackW = x2 - x1
+    local rowTop = t:GetCellY(bar.row - 1)
+    local rowBot = t:GetCellY(bar.row)
+    bar.border:ClearAllPoints()
+    bar.border:SetPoint("TOPLEFT",     t, "TOPLEFT", t:GetCellX(bar.colL), rowTop - 1)
+    bar.border:SetPoint("BOTTOMLEFT",  t, "TOPLEFT", t:GetCellX(bar.colL), rowBot  + 2)
+    bar.border:Show()
+    bar.track:ClearAllPoints()
+    bar.track:SetPoint("BOTTOMLEFT", t, "TOPLEFT", x1, y)
+    bar.track:SetWidth(trackW)
+    bar.track:Show()
+    local weight = self.pdb.weights[i] or 0
+    bar.targetW = maxW > 0 and (weight / maxW * trackW) or 0
+    if instant or bar.currentW == nil then
+      bar.currentW = bar.targetW
+    end
+    bar.fill:ClearAllPoints()
+    bar.fill:SetPoint("BOTTOMLEFT", t, "TOPLEFT", x1, y)
+  end
+
+  if not t.animating then
+    t.animating = true
+    t:SetScript("OnUpdate", function(frame, elapsed)
+      local allDone = true
+      for _, bar in ipairs(frame.bars) do
+        if abs(bar.currentW - bar.targetW) > 0.5 then
+          bar.currentW = bar.currentW + (bar.targetW - bar.currentW) * min(elapsed * 12, 1)
+          allDone = false
+        else
+          bar.currentW = bar.targetW
+        end
+        if bar.currentW > 1 then
+          bar.fill:SetWidth(bar.currentW)
+          bar.fill:Show()
+        else
+          bar.fill:Hide()
+        end
+      end
+      if allDone then
+        frame:SetScript("OnUpdate", nil)
+        frame.animating = false
+      end
+    end)
+  end
+end
+
 function ReforgeLite:UpdateStatWeightList ()
   local rows = ITEM_STAT_COUNT
   local extraRows = 0
   self.statWeights.inputs = {}
+  if self.statWeights.bars then
+    for _, bar in ipairs(self.statWeights.bars) do
+      bar.track:Hide()
+      bar.fill:Hide()
+      bar.border:Hide()
+    end
+  end
+  self.statWeights.bars = {}
   rows = ceil(rows / 2) + extraRows
   for i, v in ipairs (ITEM_STATS) do
     local col = floor ((i - 1) / (self.statWeights.rows - extraRows))
@@ -1186,6 +1266,7 @@ function ReforgeLite:UpdateStatWeightList ()
         function (val)
         self.pdb.weights[i] = val
         self:RefreshMethodStats()
+        self:RefreshStatWeightBars()
       end,
       {
       OnTabPressed = function(frame)
@@ -1197,7 +1278,32 @@ function ReforgeLite:UpdateStatWeightList ()
       end
     })
     self.statWeights:SetCell (row, col + 1, self.statWeights.inputs[i])
+
+    local c = STAT_COLORS[v.statId]
+    local track = self.statWeights:CreateTexture(nil, "BACKGROUND")
+    track:SetColorTexture(0.08, 0.10, 0.14)
+    track:SetHeight(3)
+    local fill = self.statWeights:CreateTexture(nil, "ARTWORK")
+    fill:SetColorTexture(c[1], c[2], c[3], 0.85)
+    fill:SetHeight(3)
+    local border = self.statWeights:CreateTexture(nil, "BORDER")
+    border:SetColorTexture(c[1], c[2], c[3], 1)
+    border:SetWidth(2)
+    self.statWeights.bars[i] = {
+      track  = track,
+      fill   = fill,
+      border = border,
+      row    = row,
+      colL   = col - 1,
+      colR   = col + 1,
+    }
   end
+
+  self.statWeights.OnUpdate = function()
+    self:RefreshStatWeightBars(true)
+  end
+
+  self:RefreshStatWeightBars()
 
   self.statCaps:Show2 ()
   self:SetAnchor (self.computeButton, "TOPLEFT", self.statCaps, "BOTTOMLEFT", 0, -10)
@@ -1236,10 +1342,16 @@ function ReforgeLite:CreateOptionList ()
     width = 150,
   })
   self.statWeightsCategory:AddFrame(self.targetLevel)
-  self.targetLevel.text = self.targetLevel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  self.targetLevel.text:SetText(STAT_TARGET_LEVEL)
-  self:SetAnchor(self.targetLevel.text, "TOPLEFT", self.presetsButton, "BOTTOMLEFT", 0, -12)
-  self.targetLevel:SetPoint("LEFT", self.targetLevel.text, "RIGHT", 5, 0)
+  self:SetAnchor(self.targetLevel, "TOPLEFT", self.presetsButton, "BOTTOMLEFT", 0, -5)
+  GUI:SetTooltip(self.targetLevel, function()
+    local levels = levelList()
+    for _, entry in ipairs(levels) do
+      if entry.value == self.pdb.targetLevel then
+        return STAT_TARGET_LEVEL .. ": " .. entry.name
+      end
+    end
+    return STAT_TARGET_LEVEL
+  end, {wrap = false})
 
   self.buffsContextMenu = GUI:CreateFilterDropdown(self.content, L["Buffs"], {resizeToTextPadding = 25})
   self.statWeightsCategory:AddFrame(self.buffsContextMenu)
@@ -1269,9 +1381,9 @@ function ReforgeLite:CreateOptionList ()
   end)
 
   self.statWeights = GUI:CreateTable (ceil (ITEM_STAT_COUNT / 2), 4)
-  self:SetAnchor (self.statWeights, "TOPLEFT", self.targetLevel.text, "BOTTOMLEFT", 0, -8)
+  self:SetAnchor (self.statWeights, "TOPLEFT", self.targetLevel, "BOTTOMLEFT", 0, -5)
   self.statWeightsCategory:AddFrame (self.statWeights)
-  self.statWeights:SetRowHeight (ITEM_SIZE + 2)
+  self.statWeights:SetRowHeight (ITEM_SIZE + 7)
   self.statWeights:SetColumnWidth(2, 61)
   self.statWeights:SetColumnWidth(4, 61)
   self.statWeights:EnableColumnAutoWidth(1, 3)
