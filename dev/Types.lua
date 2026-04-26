@@ -191,8 +191,7 @@
 ---@field scrollBarShown boolean Scroll bar visibility
 ---@field scrollBg Texture Scroll background
 ---@field scrollFrame ScrollFrame Scroll frame
----@field scrollOffset number Scroll offset
----@field scrollValue number Scroll value
+---@field scrollOffset number Scroll offset in pixels
 ---@field settings table Settings table widget
 ---@field settingsCategory table Settings category
 ---@field statCaps table Stat caps table widget

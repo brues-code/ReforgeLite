@@ -657,47 +657,29 @@ end
 
 ------------------------------------------------------------------------
 
-function ReforgeLite:SetScroll (value)
-  local viewheight = self.scrollFrame:GetHeight ()
-  local height = self.content:GetHeight ()
-  local offset
-
-  if viewheight > height then
-    offset = 0
-  else
-    offset = floor ((height - viewheight) / 1000 * value)
-  end
-  self.content:ClearAllPoints ()
-  self.content:SetPoint ("TOPLEFT", 0, offset)
-  self.content:SetPoint ("TOPRIGHT", 0, offset)
+function ReforgeLite:SetScroll(offset)
+  self.content:ClearAllPoints()
+  self.content:SetPoint("TOPLEFT", 0, offset)
+  self.content:SetPoint("TOPRIGHT", 0, offset)
   self.scrollOffset = offset
-  self.scrollValue = value
 end
 
-function ReforgeLite:FixScroll ()
-  local offset = self.scrollOffset
-  local viewheight = self.scrollFrame:GetHeight ()
-  local height = self.content:GetHeight ()
-  if height < viewheight + 2 then
+function ReforgeLite:FixScroll()
+  local viewheight = self.scrollFrame:GetHeight()
+  local maxOffset = max(0, self.content:GetHeight() - viewheight)
+  if maxOffset < 2 then
     if self.scrollBarShown then
       self.scrollBarShown = nil
-      self.scrollBar:Hide ()
-      self.scrollBar:SetValue (0)
+      self.scrollBar:Hide()
+      self:SetScroll(0)
     end
   else
+    self.scrollBar:SetMinMaxValues(0, maxOffset)
     if not self.scrollBarShown then
       self.scrollBarShown = true
-      self.scrollBar:Show ()
+      self.scrollBar:Show()
     end
-    local value = (offset / (height - viewheight) * 1000)
-    if value > 1000 then value = 1000 end
-    self.scrollBar:SetValue (value)
-    self:SetScroll (value)
-    if value < 1000 then
-      self.content:ClearAllPoints ()
-      self.content:SetPoint ("TOPLEFT", 0, offset)
-      self.content:SetPoint ("TOPRIGHT", 0, offset)
-    end
+    self.scrollBar:SetValue(min(self.scrollOffset, maxOffset))
   end
 end
 
@@ -813,7 +795,6 @@ function ReforgeLite:CreateFrame()
 
   self:CreateItemTable ()
 
-  self.scrollValue = 0
   self.scrollOffset = 0
 
   self.scrollFrame = CreateFrame ("ScrollFrame", nil, self)
@@ -822,13 +803,11 @@ function ReforgeLite:CreateFrame()
   self.scrollFrame:SetPoint ("TOP", 0, -28)
   self.scrollFrame:SetPoint ("BOTTOMRIGHT", -22, 15)
   self.scrollFrame:EnableMouseWheel (true)
-  self.scrollFrame:SetScript ("OnMouseWheel", function (frame, value)
+  self.scrollFrame:SetScript("OnMouseWheel", function(_, value)
     if self.scrollBarShown then
-      local diff = self.content:GetHeight() - frame:GetHeight ()
-      local delta = (value > 0 and -1 or 1)
-      self.scrollBar:SetValue (min (max (self.scrollValue + delta * (1000 / (diff / 45)), 0), 1000))
+      local delta = (value > 0 and -1 or 1) * 45
+      self.scrollBar:SetValue(self.scrollOffset + delta)
     end
-
   end)
   self.scrollFrame:SetScript ("OnSizeChanged", function (frame)
     RunNextFrame(function() self:FixScroll() end)
@@ -837,7 +816,7 @@ function ReforgeLite:CreateFrame()
   self.scrollBar = CreateFrame ("Slider", "ReforgeLiteScrollBar", self.scrollFrame, "UIPanelScrollBarTemplate")
   self.scrollBar:SetPoint ("TOPLEFT", self.scrollFrame, "TOPRIGHT", 0, -14)
   self.scrollBar:SetPoint ("BOTTOMLEFT", self.scrollFrame, "BOTTOMRIGHT", 4, 16)
-  self.scrollBar:SetMinMaxValues (0, 1000)
+  self.scrollBar:SetMinMaxValues(0, 0)
   self.scrollBar:SetValueStep (1)
   self.scrollBar:SetValue (0)
   self.scrollBar:SetWidth (16)
