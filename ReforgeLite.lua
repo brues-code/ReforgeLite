@@ -1742,7 +1742,13 @@ function ReforgeLite:UpdateMethodCategory()
     end
 
     self.methodStats.OnUpdate = function()
-      self:RefreshMethodStatBars(true)
+      if not self._barRefreshPending then
+        self._barRefreshPending = true
+        RunNextFrame(function()
+          self._barRefreshPending = nil
+          self:RefreshMethodStatBars(true)
+        end)
+      end
     end
 
     self.expertiseToHitHelpButton = GUI:CreateHelpButton(self.methodStats, L["Your Expertise rating is being converted to spell hit.\n\nIn Mists of Pandaria, casters benefit from Expertise due to it automatically converting to Hit at a 1:1 ratio.\n\nThe Hit value shown above includes this converted Expertise rating.\n\nNote: The character sheet is bugged and doesn't show Expertise converted to spell hit, but the conversion works correctly in combat."], { scale = 0.45 })
