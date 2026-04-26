@@ -123,6 +123,7 @@ function WidgetLockMixin:LockWidget()
       self.prevColor = {self:GetTextColor()}
       self:SetTextColor(addonTable.COLORS.grey:GetRGB())
     end
+    if self.lockTexture then self.lockTexture:SetDesaturated(true) end
   end
 end
 
@@ -141,6 +142,7 @@ function WidgetLockMixin:UnlockWidget()
       self:SetTextColor(unpack(self.prevColor))
       self.prevColor = nil
     end
+    if self.lockTexture then self.lockTexture:SetDesaturated(false) end
   end
 end
 
@@ -494,6 +496,7 @@ function GUI:CreateColorPicker(parent, width, height, color, handler)
     box:SetScript("OnEnter", function(b) b.glow:Show() end)
     box:SetScript("OnLeave", function(b) b.glow:Hide() end)
     Mixin(box, WidgetLockMixin)
+    box.lockTexture = box.texture
   end
   box:SetParent(parent)
   box:Show()
