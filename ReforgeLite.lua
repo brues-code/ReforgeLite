@@ -1194,12 +1194,6 @@ function ReforgeLite:RefreshStatWeightBars(instant)
     local x2 = t:GetCellX(bar.colR) - PAD
     local y  = t:GetCellY(bar.row) + 2
     local trackW = x2 - x1
-    local rowTop = t:GetCellY(bar.row - 1)
-    local rowBot = t:GetCellY(bar.row)
-    bar.border:ClearAllPoints()
-    bar.border:SetPoint("TOPLEFT",     t, "TOPLEFT", t:GetCellX(bar.colL), rowTop - 1)
-    bar.border:SetPoint("BOTTOMLEFT",  t, "TOPLEFT", t:GetCellX(bar.colL), rowBot  + 2)
-    bar.border:Show()
     bar.track:ClearAllPoints()
     bar.track:SetPoint("BOTTOMLEFT", t, "TOPLEFT", x1, y)
     bar.track:SetWidth(trackW)
@@ -1247,7 +1241,6 @@ function ReforgeLite:UpdateStatWeightList ()
     for _, bar in ipairs(self.statWeights.bars) do
       bar.track:Hide()
       bar.fill:Hide()
-      bar.border:Hide()
     end
   end
   self.statWeights.bars = {}
@@ -1286,13 +1279,9 @@ function ReforgeLite:UpdateStatWeightList ()
     local fill = self.statWeights:CreateTexture(nil, "ARTWORK")
     fill:SetColorTexture(c[1], c[2], c[3], 0.85)
     fill:SetHeight(3)
-    local border = self.statWeights:CreateTexture(nil, "BORDER")
-    border:SetColorTexture(c[1], c[2], c[3], 1)
-    border:SetWidth(2)
     self.statWeights.bars[i] = {
       track  = track,
       fill   = fill,
-      border = border,
       row    = row,
       colL   = col - 1,
       colR   = col + 1,
