@@ -219,7 +219,11 @@
     "BreakUpLargeNumbers",
     "GetInventoryItemID",
     "SafePack",
-    "PlayerUtil"
+    "PlayerUtil",
+    "Mixin",
+    "HelpPlateTooltip",
+    "SetClampedTextureRotation",
+    "MakeRecyclablePool"
   ],
   "diagnostics.disable": [
     "inject-field",

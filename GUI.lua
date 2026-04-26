@@ -68,10 +68,11 @@ end
 ---Sets a tooltip on a widget
 ---@param widget Frame The widget to add tooltip to
 ---@param tip? string|function Tooltip text or function returning tooltip text
+---@param opts? {wrap: boolean} Options table
 ---@return nil
-function GUI:SetTooltip (widget, tip)
+function GUI:SetTooltip (widget, tip, opts)
   if tip then
-    widget:SetScript ("OnEnter", function (tipFrame)
+    widget:HookScript ("OnEnter", function (tipFrame)
       local tooltipFunc = "AddLine"
       local tipText
       if type(tip) == "function" then
@@ -86,12 +87,13 @@ function GUI:SetTooltip (widget, tip)
         end
       end
       if tipText then
+        local wrap = not opts or opts.wrap ~= false
         GameTooltip:SetOwner(tipFrame, "ANCHOR_LEFT")
-        GameTooltip[tooltipFunc](GameTooltip, tipText, nil, nil, nil, true)
+        GameTooltip[tooltipFunc](GameTooltip, tipText, nil, nil, nil, wrap)
         GameTooltip:Show()
       end
     end)
-    widget:SetScript ("OnLeave", GameTooltip_Hide)
+    widget:HookScript ("OnLeave", GameTooltip_Hide)
   else
     widget:SetScript ("OnEnter", nil)
     widget:SetScript ("OnLeave", nil)
@@ -544,14 +546,22 @@ GUI.helpButtons = {}
 ---Creates a help button (question mark icon)
 ---@param parent Frame Parent frame
 ---@param tooltip string Help tooltip text
----@param opts? table Options: scale (default 0.6)
+---@param opts? table Options: scale (default 0.6), tooltipWidth (default 320)
 ---@return Button btn The help button
 function GUI:CreateHelpButton(parent, tooltip, opts)
   opts = opts or {}
   local btn = CreateFrame("Button", nil, parent, "MainHelpPlateButton")
   btn:SetFrameLevel(btn:GetParent():GetFrameLevel() + 1)
   btn:SetScale(opts.scale or 0.6)
-  self:SetTooltip(btn, tooltip)
+  local width = opts.tooltipWidth or 320
+  btn.ShowTooltip = function(b)
+    HelpPlateTooltip.LingerAndFade:Stop()
+    HelpPlateTooltip:SetWidth(width)
+    HelpPlateTooltip.Text:SetWidth(width - 30)
+    HelpPlateTooltip:Init(b, tooltip, "DOWN")
+  end
+  btn:HookScript("OnLeave", function() HelpPlateTooltip:Hide() end)
+  btn:HookScript("OnHide",  function() HelpPlateTooltip:Hide() end)
   tinsert(self.helpButtons, btn)
   return btn
 end
