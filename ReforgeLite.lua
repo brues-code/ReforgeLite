@@ -1729,8 +1729,7 @@ function ReforgeLite:UpdateMethodCategory()
     for i, v in ipairs(ITEM_STATS) do
       local cell = i - 1
       local c = STAT_COLORS[v.statId]
-      local color = c and CreateColor(c[1], c[2], c[3]) or addonTable.COLORS.white
-      self.methodStats:SetCellText(cell, 0, v.long, "LEFT", color)
+      self.methodStats:SetCellText(cell, 0, v.long, "LEFT")
       self.methodStats:SetCellText(cell, 1, "0", "RIGHT")
       self.methodStats:SetCellText(cell, 2, "0", "RIGHT", addonTable.COLORS.grey)
       local track = self.methodStats:CreateTexture(nil, "BACKGROUND")
