@@ -764,7 +764,7 @@ function ReforgeLite:CreateFrame()
   self.titleIcon = self:CreateTexture(nil, "OVERLAY")
   self.titleIcon:SetSize(16, 16)
   self.titleIcon:SetPoint("LEFT", self.titlebar, "LEFT", 9, 0)
-  self.titleIcon:SetTexture(459028)
+  self.titleIcon:SetTexture(C_AddOns.GetAddOnMetadata(addonName, "IconTexture"))
 
   self.title = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   self.title:SetText(C_AddOns.GetAddOnTitle(addonName))
