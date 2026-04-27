@@ -156,10 +156,16 @@ function ReforgeLite:CalcHasteWithBonuses(haste)
   return self:CalcHasteWithBonus(haste, meleeBonus), self:CalcHasteWithBonus(haste, rangedBonus), self:CalcHasteWithBonus(haste, spellBonus)
 end
 
----Calculates required melee hit percentage for target level
+---Calculates required special melee hit percentage for target level
 ---@return number hitPercent Required melee hit percentage
-function ReforgeLite:GetNeededMeleeHit ()
+function ReforgeLite:GetNeededSpecialMeleeHit()
   return max(0, 3 + 1.5 * self.pdb.targetLevel)
+end
+
+---Calculates required normal melee hit percentage for target level
+---@return number hitPercent Required melee hit percentage
+function ReforgeLite:GetNeededNormalMeleeHit()
+  return max(0, 22 + 1.5 * self.pdb.targetLevel)
 end
 ---Calculates required spell hit percentage for target level
 ---@return number hitPercent Required spell hit percentage
@@ -203,7 +209,7 @@ ReforgeLite.capPresets = {
     value = CAPS.MeleeHitCap,
     name = L["Melee hit cap"],
     getter = function ()
-      return ReforgeLite:RatingPerPoint(StatHit) * (ReforgeLite:GetNeededMeleeHit() - ReforgeLite:GetMeleeHitBonus())
+      return ReforgeLite:RatingPerPoint(StatHit) * (ReforgeLite:GetNeededSpecialMeleeHit() - ReforgeLite:GetMeleeHitBonus())
     end,
     category = StatHit
   },
@@ -219,7 +225,7 @@ ReforgeLite.capPresets = {
     value = CAPS.MeleeDWHitCap,
     name = L["Melee DW hit cap"],
     getter = function ()
-      return ReforgeLite:RatingPerPoint(StatHit) * (ReforgeLite:GetNeededMeleeHit() + 19 - ReforgeLite:GetMeleeHitBonus())
+      return ReforgeLite:RatingPerPoint(StatHit) * (ReforgeLite:GetNeededNormalMeleeHit() - ReforgeLite:GetMeleeHitBonus())
     end,
     category = StatHit
   },

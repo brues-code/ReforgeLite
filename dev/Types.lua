@@ -220,7 +220,8 @@
 ---@field GetHasteBonuses fun(self: ReforgeLite): number, number, number
 ---@field CalcHasteWithBonus fun(self: ReforgeLite, haste: number, hasteBonus: number): number
 ---@field CalcHasteWithBonuses fun(self: ReforgeLite, haste: number): number, number, number
----@field GetNeededMeleeHit fun(self: ReforgeLite): number
+---@field GetNeededSpecialMeleeHit fun(self: ReforgeLite): number
+---@field GetNeededNormalMeleeHit fun(self: ReforgeLite): number
 ---@field GetNeededSpellHit fun(self: ReforgeLite): number
 ---@field GetNeededExpertiseSoft fun(self: ReforgeLite): number
 ---@field GetNeededExpertiseHard fun(self: ReforgeLite): number
