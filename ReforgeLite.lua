@@ -107,8 +107,8 @@ local DefaultDB = {
 }
 
 local RFL_FRAMES = { ReforgeLite }
-RFL_FRAMES.CloseAll = function(t)
-  for _, frame in ipairs(t) do
+function RFL_FRAMES:CloseAll()
+  for _, frame in ipairs(self) do
     frame:Hide()
   end
 end
@@ -119,6 +119,9 @@ end
 
 local PLAYER_ITEM_DATA = setmetatable({}, {
   __index = function(t, k)
+    if type(k) ~= "number" or k < INVSLOT_FIRST_EQUIPPED or k > INVSLOT_LAST_EQUIPPED then
+      k = INVSLOT_AMMO -- Returns Dummy Item
+    end
     local item = Item:CreateFromEquipmentSlot(k)
     rawset(t, k, item)
     return item

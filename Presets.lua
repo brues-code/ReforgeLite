@@ -273,8 +273,9 @@ local nameFormatWithTicks = nameFormat..L["ticks"]
 
 local HASTE_BREAKS = setmetatable({}, {
   __index = function(t, k)
-    rawset(t,k, {})
-    return t[k]
+    local val = {}
+    rawset(t, k, val)
+    return val
   end
 })
 
