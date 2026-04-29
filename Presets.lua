@@ -691,7 +691,7 @@ function ReforgeLite:InitPresets()
     GUI:ClearEditFocus()
 
     local saveButton = rootDescription:CreateButton(SAVE, function()
-      GUI.CreateStaticPopup("REFORGE_LITE_SAVE_PRESET",
+      GUI.CreateStaticPopup("SAVE_PRESET",
         L["Enter the preset name"],
         function(popup)
           self.cdb.customPresets[popup:GetEditBox():GetText()] = {
@@ -700,7 +700,6 @@ function ReforgeLite:InitPresets()
           }
           self:InitCustomPresets()
         end, { hasEditBox = 1 })
-      StaticPopup_Show("REFORGE_LITE_SAVE_PRESET")
     end)
 
     saveButton:SetTitleAndTextTooltip(L["Save current stat weights and caps as a custom preset"], L["Custom presets are shared across all characters of this class"])
@@ -761,13 +760,12 @@ function ReforgeLite:InitPresets()
       if info.hasDelete then
         local button = desc:CreateButton(info.text, function(mouseButton)
           if IsShiftKeyDown() then
-            GUI.CreateStaticPopup("REFORGE_LITE_DELETE_PRESET",
+            GUI.CreateStaticPopup("DELETE_PRESET",
               L["Delete preset '%s'?"]:format(info.presetName),
               function()
                 self.cdb.customPresets[info.presetName] = nil
                 self:InitCustomPresets()
               end, { button1 = DELETE })
-            StaticPopup_Show("REFORGE_LITE_DELETE_PRESET")
           else
             if info.value.targetLevel then
               self.pdb.targetLevel = info.value.targetLevel

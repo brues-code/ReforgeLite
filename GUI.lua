@@ -1,5 +1,5 @@
 ---@type string, AddonTable
-local _, addonTable = ...
+local addonName, addonTable = ...
 local GUI = {}
 addonTable.GUI = GUI
 LibStub("AceHook-3.0"):Embed(GUI)
@@ -1216,6 +1216,7 @@ end
 ---@param opts? table Options: button1 (text), hasEditBox (boolean)
 ---@return nil
 function GUI.CreateStaticPopup(name, text, OnAccept, opts)
+  name = addonName:upper() .. '_' .. name
   opts = opts or {}
   StaticPopupDialogs[name] = {
     text = text,
@@ -1244,6 +1245,7 @@ function GUI.CreateStaticPopup(name, text, OnAccept, opts)
     end,
     EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
   }
+    StaticPopup_Show(name)
 end
 
 callbacks:RegisterCallback("PreCalculateStart", function(_, self) self:Lock() end, "GUI", GUI)
