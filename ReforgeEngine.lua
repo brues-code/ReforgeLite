@@ -29,9 +29,6 @@ function ReforgeLite:GetStatMultipliers()
   return result
 end
 
--- SPEC_IDS and STAT_CONVERSIONS are flavor-specific data, provided by
--- <Flavor>/Data.lua (loaded before this file).
-
 ---Gets stat conversion rules for the current class/spec
 ---Handles special conversions like Spirit->Hit for casters, Expertise->Hit for hybrids
 ---@return table<number, table<number, number>>|nil conversion Nested table of source stat to {dest stat = conversion rate}
