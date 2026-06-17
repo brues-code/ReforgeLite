@@ -331,13 +331,14 @@ local function GetReforgeIDFromString(item)
 end
 
 local function GetReforgeID(slotId)
-  if ignoredSlots[slotId] then return end
-  -- Cata (4.4.2) item links don't carry the reforge ID, so the flavor supplies a
-  -- tooltip-scan based detector. MoP uses the fast item-link parse.
-  if addonTable.GetReforgeIDForSlot then
-    return addonTable.GetReforgeIDForSlot(slotId)
+  -- Prefer the reforge ID embedded in the item link; fall back to the flavor's tooltip
+  -- scan only when the link carries none (Cata). This way, if a client ever starts
+  -- embedding reforge IDs in links, the fast link path takes over automatically.
+  local reforgeId = GetReforgeIDFromString(PLAYER_ITEM_DATA[slotId]:GetItemLink())
+  if not reforgeId and addonTable.GetReforgeIDForSlot then
+    reforgeId = addonTable.GetReforgeIDForSlot(slotId)
   end
-  return GetReforgeIDFromString(PLAYER_ITEM_DATA[slotId]:GetItemLink())
+  return reforgeId
 end
 
 function ReforgeLite:GetReforgeTableIndex(src, dst)
@@ -2156,6 +2157,9 @@ local function HandleTooltipUpdate(tip)
   local _, item = tip:GetItem()
   if not item then return end
   local reforgeId = GetReforgeIDFromString(item)
+  if not reforgeId and addonTable.SearchTooltipForReforgeID then
+    reforgeId = addonTable.SearchTooltipForReforgeID(tip)
+  end
   if not reforgeId then return end
   for _, region in pairs({tip:GetRegions()}) do
     if region:GetObjectType() == "FontString" and region:GetText() == REFORGED then
