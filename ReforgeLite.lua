@@ -332,6 +332,11 @@ end
 
 local function GetReforgeID(slotId)
   if ignoredSlots[slotId] then return end
+  -- Cata (4.4.2) item links don't carry the reforge ID, so the flavor supplies a
+  -- tooltip-scan based detector. MoP uses the fast item-link parse.
+  if addonTable.GetReforgeIDForSlot then
+    return addonTable.GetReforgeIDForSlot(slotId)
+  end
   return GetReforgeIDFromString(PLAYER_ITEM_DATA[slotId]:GetItemLink())
 end
 
@@ -1079,7 +1084,7 @@ function ReforgeLite:UpdateCapPreset (i, point)
     self.statCaps.cells[row][3]:SetTextColor (0.5, 0.5, 0.5)
     self.statCaps.cells[row][3]:SetMouseClickEnabled (false)
     self.statCaps.cells[row][3]:ClearFocus ()
-    self.pdb.caps[i].points[point].value = max(0, floor(self.capPresets[preset].getter()))
+    self.pdb.caps[i].points[point].value = max(0, ceil(self.capPresets[preset].getter()))
   else
     self.statCaps.cells[row][3]:SetTextColor (1, 1, 1)
     self.statCaps.cells[row][3]:SetMouseClickEnabled (true)
@@ -1245,12 +1250,7 @@ function ReforgeLite:CreateOptionList ()
   self.statWeightsCategory:AddFrame(self.buffsContextMenu)
   self:SetAnchor(self.buffsContextMenu, "LEFT", self.targetLevel, "RIGHT", 10, 0)
 
-  local buffsContextValues = {
-    { key = 'spellHaste', text = addonTable.CreateIconMarkup(136092) .. L["5% Spell Haste"], selected = self.PlayerHasSpellHasteBuff },
-    { key = 'meleeHaste', text = addonTable.CreateIconMarkup(133076) .. L["10% Melee Haste"], selected = self.PlayerHasMeleeHasteBuff },
-    { key = 'mastery', text = ("%s+%s %s"):format(addonTable.CreateIconMarkup(136046), addonTable.MASTERY_BY_LEVEL[UnitLevel('player')], STAT_MASTERY), selected = self.PlayerHasMasteryBuff },
-    { key = 'crit', text = addonTable.CreateIconMarkup(136112) .. "5% " .. CRIT_ABBR, selected = self.PlayerHasCritBuff },
-  }
+  local buffsContextValues = addonTable.GetBuffOptions()
   local function SetSelected(box)
     self.pdb[box.key] = not self.pdb[box.key]
     self:QueueUpdate()
@@ -1770,6 +1770,14 @@ function ReforgeLite:UpdatePlayerSpecInfo()
   end
   self.currentSpecRole = specRole
   self.playerSpecTexture:SetTexture(icon)
+  if not GetTalentTierInfo then
+    -- Cata (4.4.2) uses a tree-based talent system without per-tier talent choices;
+    -- show only the spec icon, hide the (MoP) per-tier talent icons.
+    for tier = 1, MAX_NUM_TALENT_TIERS do
+      self.playerTalents[tier]:Hide()
+    end
+    return
+  end
   local activeSpecGroup = C_SpecializationInfo.GetActiveSpecGroup()
   for tier = 1, MAX_NUM_TALENT_TIERS do
     local tierAvailable, selectedTalentColumn = GetTalentTierInfo(tier, activeSpecGroup, false, "player")
