@@ -41,6 +41,11 @@ local ITEM_SLOTS = {
   "MAINHANDSLOT",
   "SECONDARYHANDSLOT",
 }
+
+if ClassicExpansionAtMost(LE_EXPANSION_CATACLYSM) then
+  tinsert(ITEM_SLOTS, "RANGEDSLOT")
+end
+
 ReforgeLite.itemSlots = ITEM_SLOTS
 local ITEM_SLOT_COUNT = #ITEM_SLOTS
 
