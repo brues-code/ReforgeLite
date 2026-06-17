@@ -1822,9 +1822,10 @@ function ReforgeLite:QueueUpdate()
   local time = GetTime()
   if self.lastRan == time then return end
   self.lastRan = time
-  RunNextFrame(function()
+  C_Timer.After(0.2, function()
     self:UpdateItems()
     self:RefreshMethodWindow()
+    self:RefreshCaps()
   end)
 end
 
