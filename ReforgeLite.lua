@@ -1768,14 +1768,7 @@ function ReforgeLite:UpdatePlayerSpecInfo()
   end
   self.currentSpecRole = specRole
   self.playerSpecTexture:SetTexture(icon)
-  if not GetTalentTierInfo then
-    -- Cata (4.4.2) uses a tree-based talent system without per-tier talent choices;
-    -- show only the spec icon, hide the (MoP) per-tier talent icons.
-    for tier = 1, MAX_NUM_TALENT_TIERS do
-      self.playerTalents[tier]:Hide()
-    end
-    return
-  end
+  if not GetTalentTierInfo then return end
   local activeSpecGroup = C_SpecializationInfo.GetActiveSpecGroup()
   for tier = 1, MAX_NUM_TALENT_TIERS do
     local tierAvailable, selectedTalentColumn = GetTalentTierInfo(tier, activeSpecGroup, false, "player")
@@ -2255,6 +2248,8 @@ end
 
 local currentSpec -- hack because this event likes to fire twice and when entering world.
 function ReforgeLite:ACTIVE_TALENT_GROUP_CHANGED(curr)
+  self:GetConversion()
+  self:UpdatePlayerSpecInfo()
   if self.db.specProfiles then
     if not currentSpec then
       currentSpec = curr
@@ -2264,8 +2259,6 @@ function ReforgeLite:ACTIVE_TALENT_GROUP_CHANGED(curr)
       self:SwapSpecProfiles()
     end
   end
-  self:GetConversion()
-  self:UpdatePlayerSpecInfo()
 end
 
 function ReforgeLite:PLAYER_ENTERING_WORLD()
