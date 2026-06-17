@@ -13,6 +13,7 @@ local L = setmetatable({}, {
     return t[k]
 end})
 addonTable.L = L
+addonTable.CurrentLocale = GetLocale()
 
 addonTable.printLog = {}
 local gprint = print
