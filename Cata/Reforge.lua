@@ -16,8 +16,7 @@ local statIds = addonTable.statIds
 
 -- EquipPredicate prefixes the rating lines; "" on enUS (inherited by most locales),
 -- ITEM_SPELL_TRIGGER_ONEQUIP on zhTW/koKR (matches the 4.4.2 ReforgeLite locales).
-local locale = GetLocale()
-local EquipPredicate = (locale == "zhTW" or locale == "koKR") and (ITEM_SPELL_TRIGGER_ONEQUIP .. " ") or ""
+local EquipPredicate = (addonTable.CurrentLocale == "zhTW" or addonTable.CurrentLocale == "koKR") and (ITEM_SPELL_TRIGGER_ONEQUIP .. " ") or ""
 
 local function RatingPattern(longConst)
   return EquipPredicate .. (_G[longConst] or ""):gsub("%%s", "(.+)")
