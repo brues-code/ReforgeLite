@@ -24,9 +24,6 @@
 embeds.xml
 #@end-no-lib-strip@
 
-data\RandPropPoints.lua
-data\ScalingTable.lua
-
 GUI.lua
 ReforgeLite.lua
 ReforgeEngine.lua

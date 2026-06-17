@@ -24,8 +24,6 @@
 embeds.xml
 #@end-no-lib-strip@
 
-data\RandPropPoints.lua
-
 GUI.lua
 ReforgeLite.lua
 ReforgeEngine.lua

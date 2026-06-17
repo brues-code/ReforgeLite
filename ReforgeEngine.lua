@@ -16,12 +16,14 @@ local GetItemStats = addonTable.GetItemStatsFromTooltip
 ---@return table<number, number> multipliers Table of stat ID to multiplier (e.g., {[statIds.HASTE] = 1.05})
 function ReforgeLite:GetStatMultipliers()
   local result = {}
-  for _, v in ipairs(self.itemData) do
-    if addonTable.AmplificationItems[v.itemInfo.itemId] then
-      local factor = 1 + 0.01 * Round(addonTable.GetRandPropPoints(v.itemInfo.ilvl, 2) / 420)
-      result[statIds.HASTE] = (result[statIds.HASTE] or 1) * factor
-      result[statIds.MASTERY] = (result[statIds.MASTERY] or 1) * factor
-      result[statIds.SPIRIT] = (result[statIds.SPIRIT] or 1) * factor
+  if addonTable.AmplificationItems then
+    for _, v in ipairs(self.itemData) do
+      if addonTable.AmplificationItems[v.itemInfo.itemId] then
+        local factor = 1 + 0.01 * Round(addonTable.GetRandPropPoints(v.itemInfo.ilvl, 2) / 420)
+        result[statIds.HASTE] = (result[statIds.HASTE] or 1) * factor
+        result[statIds.MASTERY] = (result[statIds.MASTERY] or 1) * factor
+        result[statIds.SPIRIT] = (result[statIds.SPIRIT] or 1) * factor
+      end
     end
   end
   return result
