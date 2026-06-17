@@ -29,13 +29,12 @@ data\ScalingTable.lua
 
 GUI.lua
 ReforgeLite.lua
-Mists\Data.lua
-Mists\Stats.lua
 ReforgeEngine.lua
 BranchAndBound.lua
 Presets.lua
-Mists\Presets.lua
 ExportImport.lua
+
+[Game]\[Game].xml
 
 locales\[TextLocale].lua
 #@do-not-package@

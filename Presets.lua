@@ -4,16 +4,10 @@ local L = addonTable.L
 local ReforgeLite = addonTable.ReforgeLite
 local GUI = addonTable.GUI
 
-local SPEC_IDS = addonTable.SPEC_IDS
-
 local StatHit = addonTable.statIds.HIT
 local StatCrit = addonTable.statIds.CRIT
 local StatHaste = addonTable.statIds.HASTE
 local StatExp = addonTable.statIds.EXP
-
--- Stat math (RatingPerPoint, bonus getters, haste-buff detection, GetNeeded* cap
--- formulas, PlayerHas*Buff) is flavor-specific and lives in <Flavor>/Stats.lua,
--- loaded before this file.
 
 local function CreateIconMarkup(icon)
   return CreateTextureMarkup(icon, 64, 64, 18, 18, 0.07, 0.93, 0.07, 0.93, 0, 0) .. " "
@@ -36,19 +30,16 @@ end
 ---Loads presets for all specs of the player's class (or all classes in debug mode)
 ---@return nil
 function ReforgeLite:InitClassPresets()
-
-  local presets = addonTable.classPresets
-
   self.presets = wipe(self.presets or {})
   specInfo = wipe(specInfo or {})
   if self.db.debug then
     for classFile, className in pairs(LOCALIZED_CLASS_NAMES_MALE) do
-      self.presets[className] = presets[classFile]
+      self.presets[className] = addonTable.classPresets[classFile]
     end
-    TableUtil.Execute(SPEC_IDS, UpdateSpecInfo)
+    TableUtil.Execute(addonTable.SPEC_IDS, UpdateSpecInfo)
   else
-    self.presets = presets[addonTable.playerClass]
-    UpdateSpecInfo(SPEC_IDS[addonTable.playerClass])
+    self.presets = addonTable.classPresets[addonTable.playerClass]
+    UpdateSpecInfo(addonTable.SPEC_IDS[addonTable.playerClass])
   end
 end
 

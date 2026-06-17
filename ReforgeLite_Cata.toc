@@ -24,21 +24,16 @@
 embeds.xml
 #@end-no-lib-strip@
 
-Cata\json.lua
-Cata\Compat.lua
-
 data\RandPropPoints.lua
 
 GUI.lua
 ReforgeLite.lua
-Cata\Data.lua
-Cata\Stats.lua
-Cata\Reforge.lua
 ReforgeEngine.lua
 BranchAndBound.lua
 Presets.lua
-Cata\Presets.lua
 ExportImport.lua
+
+Cata\Cata.xml
 
 locales\locales.xml
 #@do-not-package@
