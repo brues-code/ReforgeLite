@@ -10,3 +10,4 @@ ignore:
   - .luacheckrc
   - .luarc.json
   - dev
+  - ReforgeLite-Cata.toc
