@@ -523,6 +523,7 @@ end
 ---Uses Branch & Bound if enabled and dual caps configured, otherwise uses DP
 ---@return nil
 function ReforgeLite:ComputeReforge()
+  self:GetConversion()
   if self.pdb.useBranchBound and self.pdb.caps[2].stat ~= 0 then
     self:ComputeReforgeBranchBound()
   else
