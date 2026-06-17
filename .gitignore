@@ -2,3 +2,5 @@
 .claude/
 libs/
 CLAUDE.md
+/.release
+release.sh
