@@ -1508,11 +1508,8 @@ function ReforgeLite:FillSettings()
   self.settings:SetCell (getOrderId('settings'), 0, GUI:CreateCheckButton (self.settings, L["Enable spec profiles"],
     self.db.specProfiles, function (val)
       self.db.specProfiles = val
-      if val then
-        self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-      else
+      if not val then
         self.pdb.prevSpecSettings = nil
-        self:UnregisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
       end
     end),
     "LEFT")
@@ -2258,16 +2255,15 @@ end
 
 local currentSpec -- hack because this event likes to fire twice and when entering world.
 function ReforgeLite:ACTIVE_TALENT_GROUP_CHANGED(curr)
-  if not currentSpec then
-    currentSpec = curr
+  if self.db.specProfiles then
+    if not currentSpec then
+      currentSpec = curr
+    end
+    if currentSpec ~= curr then
+      currentSpec = curr
+      self:SwapSpecProfiles()
+    end
   end
-  if currentSpec ~= curr then
-    currentSpec = curr
-    self:SwapSpecProfiles()
-  end
-end
-
-function ReforgeLite:PLAYER_SPECIALIZATION_CHANGED()
   self:GetConversion()
   self:UpdatePlayerSpecInfo()
 end
@@ -2305,10 +2301,7 @@ function ReforgeLite:ADDON_LOADED (addon)
   self:RegisterEvent("FORGE_MASTER_OPENED")
   self:RegisterEvent("FORGE_MASTER_CLOSED")
   self:RegisterEvent("PLAYER_ENTERING_WORLD")
-  self:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
-  if self.db.specProfiles then
-    self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-  end
+  self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 
   self:UnregisterEvent("ADDON_LOADED")
 
