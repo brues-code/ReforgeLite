@@ -21,7 +21,7 @@ ExportImport.lua
 
 Cata\root.xml
 
-locales\locales.xml
+locales.xml
 #@do-not-package@
 dev\Util.lua
 #@end-do-not-package@
