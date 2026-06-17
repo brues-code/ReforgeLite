@@ -8,7 +8,6 @@ local statIds = addonTable.statIds
 local print = addonTable.print
 
 local GetItemStats = addonTable.GetItemStatsFromTooltip
-local playerRace = select(2, UnitRace("player"))
 
 ---------------------------------------------------------------------------------------
 
@@ -48,7 +47,7 @@ function ReforgeLite:GetConversion()
       MergeTable(self.conversion, GetValueOrCallFunction(classInfo.specs, self.specID))
     end
   end
-  if playerRace == "Human" then
+  if IsPlayerSpell(20598) then -- The Human Spirit
     self.conversion[statIds.SPIRIT] = self.conversion[statIds.SPIRIT] or {}
     self.conversion[statIds.SPIRIT][statIds.SPIRIT] = (self.conversion[statIds.SPIRIT][statIds.SPIRIT] or 1) * 0.03
   end
