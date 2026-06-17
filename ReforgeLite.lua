@@ -44,8 +44,6 @@ local ITEM_SLOTS = {
 ReforgeLite.itemSlots = ITEM_SLOTS
 local ITEM_SLOT_COUNT = #ITEM_SLOTS
 
-local ignoredSlots = { [INVSLOT_TABARD] = true, [INVSLOT_BODY] = true }
-
 local ITEM_SIZE = 24
 addonTable.MAX_SPEED = 20
 

@@ -278,7 +278,6 @@
 ---@field FORGE_MASTER_ITEM_CHANGED fun(self: ReforgeLite)
 ---@field PLAYER_ENTERING_WORLD fun(self: ReforgeLite)
 ---@field PLAYER_REGEN_DISABLED fun(self: ReforgeLite)
----@field PLAYER_SPECIALIZATION_CHANGED fun(self: ReforgeLite)
 ---@field ACTIVE_TALENT_GROUP_CHANGED fun(self: ReforgeLite)
 ---@field PLAYER_AVG_ITEM_LEVEL_UPDATE fun(self: ReforgeLite)
 
