@@ -311,7 +311,7 @@ local reforgeIdStringCache = setmetatable({}, {
   __index = function(self, key)
     local _, itemOptions = GetItemInfoFromHyperlink(key)
     if not itemOptions then return false end
-    local reforgeId = select(10, LinkUtil.SplitLinkOptions(itemOptions))
+    local reforgeId = select(10, strsplit(":", itemOptions))
     reforgeId = tonumber(reforgeId)
     if not reforgeId then
       reforgeId = UNFORGE_INDEX
@@ -463,7 +463,7 @@ end
 addonTable.WoWSimsOriginTag = "WoWSims"
 
 function ReforgeLite:ValidateWoWSimsString(importStr)
-  local success, wowsims = pcall(function () return C_EncodingUtil.DeserializeJSON(importStr) end)
+  local success, wowsims = pcall(function () return addonTable.compat.DeserializeJSON(importStr) end)
   if not success or type(wowsims) ~= "table" then return false, wowsims end
   if not (wowsims.player or {}).equipment then
     return false, L["This import is missing player equipment data! Please make sure 'Gear' is selected when exporting from WoWSims."]
@@ -773,7 +773,7 @@ function ReforgeLite:CreateFrame()
   self.titleIcon:SetTexture(C_AddOns.GetAddOnMetadata(addonName, "IconTexture"))
 
   self.title = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  self.title:SetText(C_AddOns.GetAddOnTitle(addonName))
+  self.title:SetText(C_AddOns.GetAddOnMetadata(addonName, "Title"))
   self.title:SetPoint("LEFT", self.titleIcon, "RIGHT", 2, 0)
 
   self.versionInfo = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -1762,14 +1762,14 @@ end
 
 function ReforgeLite:UpdatePlayerSpecInfo()
   if not self.playerSpecTexture then return end
-  local _, specName, _, icon, specRole = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
+  local _, specName, _, icon, specRole = addonTable.compat.GetSpecInfoByID(addonTable.compat.GetCurrentSpecID())
   if specName == "" then
     specName, icon = NONE, 132222
   end
   self.currentSpecRole = specRole
   self.playerSpecTexture:SetTexture(icon)
   if not GetTalentTierInfo then return end
-  local activeSpecGroup = C_SpecializationInfo.GetActiveSpecGroup()
+  local activeSpecGroup = addonTable.compat.GetActiveSpecGroup()
   for tier = 1, MAX_NUM_TALENT_TIERS do
     local tierAvailable, selectedTalentColumn = GetTalentTierInfo(tier, activeSpecGroup, false, "player")
     if selectedTalentColumn > 0 then
@@ -2265,7 +2265,7 @@ end
 function ReforgeLite:PLAYER_ENTERING_WORLD()
   self:GetConversion()
   if not currentSpec then
-    currentSpec = C_SpecializationInfo.GetActiveSpecGroup()
+    currentSpec = addonTable.compat.GetActiveSpecGroup()
   end
 end
 

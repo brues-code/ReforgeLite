@@ -10,7 +10,11 @@ local StatHaste = addonTable.statIds.HASTE
 local StatExp = addonTable.statIds.EXP
 
 local function CreateIconMarkup(icon)
-  return CreateTextureMarkup(icon, 64, 64, 18, 18, 0.07, 0.93, 0.07, 0.93, 0, 0) .. " "
+  -- 4.4.2 may not have the texcoord form of CreateTextureMarkup; fall back to the simple one.
+  if CreateTextureMarkup then
+    return CreateTextureMarkup(icon, 64, 64, 18, 18, 0.07, 0.93, 0.07, 0.93, 0, 0) .. " "
+  end
+  return CreateSimpleTextureMarkup(icon, 18, 18) .. " "
 end
 addonTable.CreateIconMarkup = CreateIconMarkup
 
@@ -21,7 +25,7 @@ addonTable.CreateIconMarkup = CreateIconMarkup
 local specInfo
 local function UpdateSpecInfo(ids)
   for _, id in pairs(ids) do
-    local _, tabName, _, icon = GetSpecializationInfoByID(id)
+    local _, tabName, _, icon = addonTable.compat.GetSpecInfoByID(id)
     specInfo[id] = { name = tabName, icon = icon }
   end
 end

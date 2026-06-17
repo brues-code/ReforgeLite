@@ -64,7 +64,7 @@ function ReforgeLite:DisplayMessage(message, name, copyOnly)
 end
 
 function ReforgeLite:DebugMethod()
-    self:DisplayMessage(C_EncodingUtil.SerializeJSON(addonTable.methodDebug or {nty="<3"}), C_AddOns.GetAddOnMetadata(addonName, "X-Website"), true)
+    self:DisplayMessage(addonTable.compat.SerializeJSON(addonTable.methodDebug or {nty="<3"}), C_AddOns.GetAddOnMetadata(addonName, "X-Website"), true)
 end
 
 function ReforgeLite:PrintLog()
@@ -72,7 +72,7 @@ function ReforgeLite:PrintLog()
 end
 
 function ReforgeLite:ExportJSON(preset, name)
-    self:DisplayMessage(C_EncodingUtil.SerializeJSON(preset), name, true)
+    self:DisplayMessage(addonTable.compat.SerializeJSON(preset), name, true)
 end
 
 function ReforgeLite:ImportData(anchor)

@@ -36,7 +36,7 @@ end
 ---@return table<number, table<number, number>>|nil conversion Nested table of source stat to {dest stat = conversion rate}
 function ReforgeLite:GetConversion()
   self.conversion = wipe(self.conversion or {})
-  self.specID = PlayerUtil.GetCurrentSpecID()
+  self.specID = addonTable.compat.GetCurrentSpecID()
   local classInfo = addonTable.STAT_CONVERSIONS and addonTable.STAT_CONVERSIONS[playerClass]
   if classInfo then
     -- A conversion entry may be a static table (MoP) or a function returning one
