@@ -1842,7 +1842,7 @@ function ReforgeLite:CreateMethodWindow()
   self.methodWindow:SetToplevel(true)
   self.methodWindow:ClearAllPoints()
   self.methodWindow:SetClampedToScreen(self.db.clampedToScreen)
-  self.methodWindow:SetSize(250, 480)
+  self.methodWindow:SetSize(250, 64 + #ITEM_SLOTS * 26)
   if self.db.methodWindowLocation then
     self.methodWindow:SetPoint (SafeUnpack(self.db.methodWindowLocation))
   else
