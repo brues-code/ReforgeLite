@@ -1,4 +1,4 @@
-## Interface: 50503, 50504
+## Interface: 40402
 ## Author: d07.RiV (Iroared) (Continued by Brues)
 ## Title: ReforgeLite Classic
 ## Notes: Calculates optimal reforging for given weights/caps.
@@ -31,10 +31,9 @@ BranchAndBound.lua
 Presets.lua
 ExportImport.lua
 
-[Game]\[Game].xml
+Cata\Cata.xml
 
-locales\[TextLocale].lua
+locales\locales.xml
 #@do-not-package@
-## AllowAddOnTableAccess: 1
 dev\Util.lua
 #@end-do-not-package@

@@ -102,10 +102,30 @@ end
 
 GUI.pools = {}
 
+-- Frame:ClearScripts() doesn't exist on older clients (e.g. 4.4.2); fall back to
+-- clearing the script handlers our pooled widgets set.
+local POOLED_SCRIPTS = {
+  "OnClick", "PostClick", "OnEnter", "OnLeave", "OnMouseDown", "OnMouseUp",
+  "OnShow", "OnHide", "OnUpdate", "OnValueChanged", "OnTextChanged",
+  "OnEditFocusGained", "OnEditFocusLost", "OnEnterPressed", "OnEscapePressed",
+  "OnSizeChanged", "OnDragStart", "OnDragStop",
+}
+local function ClearFrameScripts(frame)
+  if frame.ClearScripts then
+    frame:ClearScripts()
+    return
+  end
+  for _, script in ipairs(POOLED_SCRIPTS) do
+    if frame:HasScript(script) then
+      frame:SetScript(script, nil)
+    end
+  end
+end
+
 local function PoolResetFrame(_, frame)
   frame:Hide()
   frame:ClearAllPoints()
-  frame:ClearScripts()
+  ClearFrameScripts(frame)
   frame:SetParent(UIParent)
 end
 

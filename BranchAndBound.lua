@@ -945,7 +945,7 @@ end
 function ReforgeLite:RunAlgorithmComparison()
   self:GetConversion()
 
-  local _, specName = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
+  local _, specName = addonTable.compat.GetSpecInfoByID(addonTable.compat.GetCurrentSpecID())
   local _, ilvl = GetAverageItemLevel()
   print(("=== %s %s - %s ilvl ==="):format(specName or "", addonTable.localeClass, ilvl))
 

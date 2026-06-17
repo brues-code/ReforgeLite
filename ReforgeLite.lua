@@ -13,6 +13,7 @@ local L = setmetatable({}, {
     return t[k]
 end})
 addonTable.L = L
+addonTable.CurrentLocale = GetLocale()
 
 addonTable.printLog = {}
 local gprint = print
@@ -311,7 +312,7 @@ local reforgeIdStringCache = setmetatable({}, {
   __index = function(self, key)
     local _, itemOptions = GetItemInfoFromHyperlink(key)
     if not itemOptions then return false end
-    local reforgeId = select(10, LinkUtil.SplitLinkOptions(itemOptions))
+    local reforgeId = select(10, strsplit(":", itemOptions))
     reforgeId = tonumber(reforgeId)
     if not reforgeId then
       reforgeId = UNFORGE_INDEX
@@ -331,8 +332,14 @@ local function GetReforgeIDFromString(item)
 end
 
 local function GetReforgeID(slotId)
-  if ignoredSlots[slotId] then return end
-  return GetReforgeIDFromString(PLAYER_ITEM_DATA[slotId]:GetItemLink())
+  -- Prefer the reforge ID embedded in the item link; fall back to the flavor's tooltip
+  -- scan only when the link carries none (Cata). This way, if a client ever starts
+  -- embedding reforge IDs in links, the fast link path takes over automatically.
+  local reforgeId = GetReforgeIDFromString(PLAYER_ITEM_DATA[slotId]:GetItemLink())
+  if not reforgeId and addonTable.GetReforgeIDForSlot then
+    reforgeId = addonTable.GetReforgeIDForSlot(slotId)
+  end
+  return reforgeId
 end
 
 function ReforgeLite:GetReforgeTableIndex(src, dst)
@@ -457,7 +464,7 @@ end
 addonTable.WoWSimsOriginTag = "WoWSims"
 
 function ReforgeLite:ValidateWoWSimsString(importStr)
-  local success, wowsims = pcall(function () return C_EncodingUtil.DeserializeJSON(importStr) end)
+  local success, wowsims = pcall(function () return addonTable.compat.DeserializeJSON(importStr) end)
   if not success or type(wowsims) ~= "table" then return false, wowsims end
   if not (wowsims.player or {}).equipment then
     return false, L["This import is missing player equipment data! Please make sure 'Gear' is selected when exporting from WoWSims."]
@@ -767,7 +774,7 @@ function ReforgeLite:CreateFrame()
   self.titleIcon:SetTexture(C_AddOns.GetAddOnMetadata(addonName, "IconTexture"))
 
   self.title = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  self.title:SetText(C_AddOns.GetAddOnTitle(addonName))
+  self.title:SetText(C_AddOns.GetAddOnMetadata(addonName, "Title"))
   self.title:SetPoint("LEFT", self.titleIcon, "RIGHT", 2, 0)
 
   self.versionInfo = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -1079,7 +1086,7 @@ function ReforgeLite:UpdateCapPreset (i, point)
     self.statCaps.cells[row][3]:SetTextColor (0.5, 0.5, 0.5)
     self.statCaps.cells[row][3]:SetMouseClickEnabled (false)
     self.statCaps.cells[row][3]:ClearFocus ()
-    self.pdb.caps[i].points[point].value = max(0, floor(self.capPresets[preset].getter()))
+    self.pdb.caps[i].points[point].value = max(0, ceil(self.capPresets[preset].getter()))
   else
     self.statCaps.cells[row][3]:SetTextColor (1, 1, 1)
     self.statCaps.cells[row][3]:SetMouseClickEnabled (true)
@@ -1245,12 +1252,7 @@ function ReforgeLite:CreateOptionList ()
   self.statWeightsCategory:AddFrame(self.buffsContextMenu)
   self:SetAnchor(self.buffsContextMenu, "LEFT", self.targetLevel, "RIGHT", 10, 0)
 
-  local buffsContextValues = {
-    { key = 'spellHaste', text = addonTable.CreateIconMarkup(136092) .. L["5% Spell Haste"], selected = self.PlayerHasSpellHasteBuff },
-    { key = 'meleeHaste', text = addonTable.CreateIconMarkup(133076) .. L["10% Melee Haste"], selected = self.PlayerHasMeleeHasteBuff },
-    { key = 'mastery', text = ("%s+%s %s"):format(addonTable.CreateIconMarkup(136046), addonTable.MASTERY_BY_LEVEL[UnitLevel('player')], STAT_MASTERY), selected = self.PlayerHasMasteryBuff },
-    { key = 'crit', text = addonTable.CreateIconMarkup(136112) .. "5% " .. CRIT_ABBR, selected = self.PlayerHasCritBuff },
-  }
+  local buffsContextValues = addonTable.GetBuffOptions()
   local function SetSelected(box)
     self.pdb[box.key] = not self.pdb[box.key]
     self:QueueUpdate()
@@ -1507,11 +1509,8 @@ function ReforgeLite:FillSettings()
   self.settings:SetCell (getOrderId('settings'), 0, GUI:CreateCheckButton (self.settings, L["Enable spec profiles"],
     self.db.specProfiles, function (val)
       self.db.specProfiles = val
-      if val then
-        self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-      else
+      if not val then
         self.pdb.prevSpecSettings = nil
-        self:UnregisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
       end
     end),
     "LEFT")
@@ -1764,13 +1763,14 @@ end
 
 function ReforgeLite:UpdatePlayerSpecInfo()
   if not self.playerSpecTexture then return end
-  local _, specName, _, icon, specRole = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
+  local _, specName, _, icon, specRole = addonTable.compat.GetSpecInfoByID(addonTable.compat.GetCurrentSpecID())
   if specName == "" then
     specName, icon = NONE, 132222
   end
   self.currentSpecRole = specRole
   self.playerSpecTexture:SetTexture(icon)
-  local activeSpecGroup = C_SpecializationInfo.GetActiveSpecGroup()
+  if not GetTalentTierInfo then return end
+  local activeSpecGroup = addonTable.compat.GetActiveSpecGroup()
   for tier = 1, MAX_NUM_TALENT_TIERS do
     local tierAvailable, selectedTalentColumn = GetTalentTierInfo(tier, activeSpecGroup, false, "player")
     if selectedTalentColumn > 0 then
@@ -1823,9 +1823,10 @@ function ReforgeLite:QueueUpdate()
   local time = GetTime()
   if self.lastRan == time then return end
   self.lastRan = time
-  RunNextFrame(function()
+  C_Timer.After(0.2, function()
     self:UpdateItems()
     self:RefreshMethodWindow()
+    self:RefreshCaps()
   end)
 end
 
@@ -2148,6 +2149,9 @@ local function HandleTooltipUpdate(tip)
   local _, item = tip:GetItem()
   if not item then return end
   local reforgeId = GetReforgeIDFromString(item)
+  if not reforgeId and addonTable.SearchTooltipForReforgeID then
+    reforgeId = addonTable.SearchTooltipForReforgeID(tip)
+  end
   if not reforgeId then return end
   for _, region in pairs({tip:GetRegions()}) do
     if region:GetObjectType() == "FontString" and region:GetText() == REFORGED then
@@ -2246,24 +2250,23 @@ end
 
 local currentSpec -- hack because this event likes to fire twice and when entering world.
 function ReforgeLite:ACTIVE_TALENT_GROUP_CHANGED(curr)
-  if not currentSpec then
-    currentSpec = curr
-  end
-  if currentSpec ~= curr then
-    currentSpec = curr
-    self:SwapSpecProfiles()
-  end
-end
-
-function ReforgeLite:PLAYER_SPECIALIZATION_CHANGED()
   self:GetConversion()
   self:UpdatePlayerSpecInfo()
+  if self.db.specProfiles then
+    if not currentSpec then
+      currentSpec = curr
+    end
+    if currentSpec ~= curr then
+      currentSpec = curr
+      self:SwapSpecProfiles()
+    end
+  end
 end
 
 function ReforgeLite:PLAYER_ENTERING_WORLD()
   self:GetConversion()
   if not currentSpec then
-    currentSpec = C_SpecializationInfo.GetActiveSpecGroup()
+    currentSpec = addonTable.compat.GetActiveSpecGroup()
   end
 end
 
@@ -2293,10 +2296,7 @@ function ReforgeLite:ADDON_LOADED (addon)
   self:RegisterEvent("FORGE_MASTER_OPENED")
   self:RegisterEvent("FORGE_MASTER_CLOSED")
   self:RegisterEvent("PLAYER_ENTERING_WORLD")
-  self:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
-  if self.db.specProfiles then
-    self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
-  end
+  self:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 
   self:UnregisterEvent("ADDON_LOADED")
 
