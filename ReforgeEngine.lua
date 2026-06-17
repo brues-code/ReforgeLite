@@ -19,7 +19,7 @@ function ReforgeLite:GetStatMultipliers()
   if addonTable.AmplificationItems then
     for _, v in ipairs(self.itemData) do
       if addonTable.AmplificationItems[v.itemInfo.itemId] then
-        local factor = 1 + 0.01 * Round(addonTable.GetRandPropPoints(v.itemInfo.ilvl, 2) / 420)
+        local factor = addonTable.GetAmplificationFactor(v.itemInfo.ilvl)
         result[statIds.HASTE] = (result[statIds.HASTE] or 1) * factor
         result[statIds.MASTERY] = (result[statIds.MASTERY] or 1) * factor
         result[statIds.SPIRIT] = (result[statIds.SPIRIT] or 1) * factor

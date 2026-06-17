@@ -118,7 +118,7 @@
 ---@field GUI GUI GUI widget library
 ---@field ReforgeLite ReforgeLite Main addon frame
 ---@field GetItemStatsFromTooltip fun(itemInfo: table): table<string, number> Get item stats by scanning tooltip (accurate for all upgrade levels)
----@field GetRandPropPoints fun(iLvl: number, t: number): number Get random property points
+---@field GetAmplificationFactor fun(iLvl: number): number Amplify equip-bonus multiplier for an item level
 ---@field callbacks CallbackRegistry Callback registry for addon events
 ---@field COLORS Colors Font color constants
 ---@field playerClass string Player class name (e.g., "WARRIOR", "MAGE")
