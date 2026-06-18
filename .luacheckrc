@@ -128,6 +128,7 @@ read_globals = {
     "UnitStat",
     "GetCombatRating",
     "GetInventorySlotInfo",
+    "LARGE_NUMBER_SEPERATOR",
     "GetAverageItemLevel",
     "tinsert",
     "tremove",

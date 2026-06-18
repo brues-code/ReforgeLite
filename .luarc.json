@@ -43,6 +43,7 @@
     "GetCombatRatingBonus",
     "GetExpertise",
     "GetInventorySlotInfo",
+    "LARGE_NUMBER_SEPERATOR",
     "GetMeleeHaste",
     "GetRangedHaste",
     "GetHitModifier",

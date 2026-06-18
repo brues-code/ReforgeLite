@@ -210,9 +210,10 @@ local function Stat(options)
       if not tooltipConst then
         return {}
       end
+      local digits = "([%d" .. (LARGE_NUMBER_SEPERATOR or ",") .. "]+)"
       return {
-        "^%+([%d,]+)%s*" .. tooltipConst .. "%s*$",
-        "^" .. tooltipConst .. "%s*%+([%d,]+)%s*$"
+        "^%+" .. digits .. "%s*" .. tooltipConst .. "%s*$",
+        "^" .. tooltipConst .. "%s*%+" .. digits .. "%s*$"
       }
     end
   }
