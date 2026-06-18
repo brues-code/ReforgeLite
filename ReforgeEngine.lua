@@ -16,15 +16,18 @@ local GetItemStats = addonTable.GetItemStatsFromTooltip
 ---@return table<number, number> multipliers Table of stat ID to multiplier (e.g., {[statIds.HASTE] = 1.05})
 function ReforgeLite:GetStatMultipliers()
   local result = {}
-  if addonTable.AmplificationItems then
+  if addonTable.GetAmplificationFactor then
     for _, v in ipairs(self.itemData) do
-      if addonTable.AmplificationItems[v.itemInfo.itemId] then
-        local factor = addonTable.GetAmplificationFactor(v.itemInfo.ilvl)
+      local factor = addonTable.GetAmplificationFactor(v.itemInfo)
+      if factor then
         result[statIds.HASTE] = (result[statIds.HASTE] or 1) * factor
         result[statIds.MASTERY] = (result[statIds.MASTERY] or 1) * factor
         result[statIds.SPIRIT] = (result[statIds.SPIRIT] or 1) * factor
       end
     end
+  end
+  if IsPlayerSpell(20598) then -- The Human Spirit: +3% Spirit
+    result[statIds.SPIRIT] = (result[statIds.SPIRIT] or 1) * 1.03
   end
   return result
 end
@@ -43,10 +46,6 @@ function ReforgeLite:GetConversion()
     if self.specID and classInfo.specs and classInfo.specs[self.specID] then
       MergeTable(self.conversion, GetValueOrCallFunction(classInfo.specs, self.specID))
     end
-  end
-  if IsPlayerSpell(20598) then -- The Human Spirit
-    self.conversion[statIds.SPIRIT] = self.conversion[statIds.SPIRIT] or {}
-    self.conversion[statIds.SPIRIT][statIds.SPIRIT] = (self.conversion[statIds.SPIRIT][statIds.SPIRIT] or 1) * 0.03
   end
 end
 

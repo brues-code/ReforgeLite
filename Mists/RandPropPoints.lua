@@ -1,6 +1,6 @@
 local _, addonTable = ...
 
-addonTable.AmplificationItems = {
+local AmplificationItems = {
   [104976] = true, -- Prismatic Prison of Pride, Raid Finder
   [104727] = true, -- Prismatic Prison of Pride, Flexible
   [102299] = true, -- Prismatic Prison of Pride
@@ -80,9 +80,11 @@ local RandPropPoints = {
     [580] = 5087,
 }
 
----Gets the Amplify equip-bonus multiplier for an amplification trinket's item level
----@param iLvl number Item level
+---Gets the Amplify equip-bonus multiplier for an item (1 if it isn't an amplification trinket)
+---@param itemInfo table Item info with itemId and ilvl
 ---@return number factor Stat multiplier (e.g. 1.05) for Haste/Mastery/Spirit
-function addonTable.GetAmplificationFactor(iLvl)
-    return 1 + 0.01 * floor((RandPropPoints[iLvl] or 0) * 0.00177)
+function addonTable.GetAmplificationFactor(itemInfo)
+    if AmplificationItems[itemInfo.itemId] then
+        return 1 + 0.01 * floor((RandPropPoints[itemInfo.ilvl] or 0) * 0.00177)
+    end
 end
