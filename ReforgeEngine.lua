@@ -26,9 +26,6 @@ function ReforgeLite:GetStatMultipliers()
       end
     end
   end
-  if IsPlayerSpell(20598) then -- The Human Spirit: +3% Spirit
-    result[statIds.SPIRIT] = (result[statIds.SPIRIT] or 1) * 1.03
-  end
   return result
 end
 
@@ -46,6 +43,10 @@ function ReforgeLite:GetConversion()
     if self.specID and classInfo.specs and classInfo.specs[self.specID] then
       MergeTable(self.conversion, GetValueOrCallFunction(classInfo.specs, self.specID))
     end
+  end
+  if IsPlayerSpell(20598) then -- The Human Spirit
+    self.conversion[statIds.SPIRIT] = self.conversion[statIds.SPIRIT] or {}
+    self.conversion[statIds.SPIRIT][statIds.SPIRIT] = (self.conversion[statIds.SPIRIT][statIds.SPIRIT] or 1) * 0.03
   end
 end
 
