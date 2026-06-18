@@ -643,6 +643,9 @@ end
 
 -- Branch and Bound state tracking
 local bbBestSolution = nil
+-- When true (best-effort pass for an infeasible cap config), constraint pruning is skipped so
+-- the search still reaches complete solutions and keeps the closest constraint-failing one.
+local bbIgnoreConstraints = false
 local bbNodesExplored = 0
 local bbBranchesPruned = 0
 local bbConstraintPrunes = 0
@@ -788,9 +791,9 @@ function ReforgeLite:BranchAndBoundSearch(position, currentStats, currentPath, d
     local shouldPrune = false
     local pruneReason = ""
 
-    -- Constraint propagation check first
-    local canSatisfyConstraints = self:CanSatisfyConstraints(position + 1, newStats, suffixBounds, data)
-    if not canSatisfyConstraints then
+    -- Constraint propagation check first (skipped in the best-effort pass, where no feasible
+    -- solution exists and we instead want the closest constraint-failing one).
+    if not bbIgnoreConstraints and not self:CanSatisfyConstraints(position + 1, newStats, suffixBounds, data) then
       shouldPrune = true
       pruneReason = "constraint violation"
       bbConstraintPrunes = bbConstraintPrunes + 1
@@ -924,6 +927,7 @@ function ReforgeLite:ComputeReforgeBranchBound()
   bbConstraintPrunes = 0
   bbScorePrunes = 0
   bbFoundExactDPPath = false
+  bbIgnoreConstraints = false
 
   -- Calculate priority cap once at the beginning
   local priorityCap = self:CalculatePriorityCap(data)
@@ -986,6 +990,22 @@ function ReforgeLite:ComputeReforgeBranchBound()
     print(("B&B: Completed - nodes explored: %d, branches pruned: %d (constraints: %d, score: %d)"):format(bbNodesExplored, bbBranchesPruned, bbConstraintPrunes, bbScorePrunes))
     if not bbFoundExactDPPath and dpChoices then
       print("B&B: WARNING - Never evaluated the exact DP path!")
+    end
+  end
+
+  -- No feasible solution means the caps are unreachable. Re-run without constraint pruning so the
+  -- search reaches complete solutions and keeps the highest-scoring (closest) one as best-effort,
+  -- rather than dropping to the much slower DP.
+  if not bbBestSolution then
+    if self.db.debug then
+      print("B&B: No feasible solution; running best-effort pass (constraints relaxed)")
+    end
+    bbIgnoreConstraints = true
+    bbNodesExplored, bbBranchesPruned, bbConstraintPrunes, bbScorePrunes = 0, 0, 0, 0
+    self:BranchAndBoundSearch(1, initialStats, {}, data, suffixBounds, allItemOptions, sortedSlots)
+    bbIgnoreConstraints = false
+    if self.db.debug then
+      print(("B&B: Best-effort complete - nodes explored: %d, branches pruned: %d (score: %d)"):format(bbNodesExplored, bbBranchesPruned, bbScorePrunes))
     end
   end
 
