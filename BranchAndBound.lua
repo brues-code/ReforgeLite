@@ -415,6 +415,72 @@ function ReforgeLite:GetSmartReforgeOptions(data, slot, priorityCap)
   return uniqueOptions
 end
 
+--- Orders reforge options to surface high-impact moves first (better early pruning):
+--- priority-cap reforges, then secondary-cap, then higher source weight, then score.
+--- @param options table Reforge options to sort in place
+--- @param data table The reforge data structure
+--- @param priorityCap number Which cap to prioritize
+function ReforgeLite:SortReforgeOptions(options, data, priorityCap)
+  local otherCap = priorityCap == 1 and 2 or 1
+  sort(options, function(a, b)
+    local aPri = (a.src == data.caps[priorityCap].stat) or (a.dst == data.caps[priorityCap].stat)
+    local bPri = (b.src == data.caps[priorityCap].stat) or (b.dst == data.caps[priorityCap].stat)
+    if aPri ~= bPri then return aPri end
+
+    local aSec = (a.src == data.caps[otherCap].stat) or (a.dst == data.caps[otherCap].stat)
+    local bSec = (b.src == data.caps[otherCap].stat) or (b.dst == data.caps[otherCap].stat)
+    if aSec ~= bSec then return aSec end
+
+    local aw = (a.src and data.weights[a.src]) or 0
+    local bw = (b.src and data.weights[b.src]) or 0
+    if aw ~= bw then return aw > bw end
+
+    return (a.score or 0) > (b.score or 0)
+  end)
+end
+
+--- Enumerates the COMPLETE set of reforge options for an item (every src->dst, deduped by
+--- distinct cap effect keeping the highest score), so B&B searches the same space as the DP
+--- and can reach the true optimum. Unlike GetSmartReforgeOptions this prunes nothing up front;
+--- the suffix-bound search handles tractability.
+--- @param data table The reforge data structure
+--- @param slot number The item slot index
+--- @param priorityCap number Which cap to prioritize (for move ordering)
+--- @return table Sorted array of reforge options
+function ReforgeLite:GetFullReforgeOptions(data, slot, priorityCap)
+  local item = data.method.items[slot]
+  if self:IsItemLocked(slot) then
+    local src, dst = nil, nil
+    if self.itemData[slot].itemInfo.reforge then
+      src, dst = unpack(self.reforgeTable[self.itemData[slot].itemInfo.reforge])
+    end
+    return { self:MakeReforgeOption(item, data, src, dst) }
+  end
+
+  -- Key by cap effect "d1:d2"; same effect -> the higher-scoring option dominates.
+  local byEffect = { ["0:0"] = self:MakeReforgeOption(item, data) }
+  for src = 1, ITEM_STAT_COUNT do
+    if item.stats[src] > 0 then
+      for dst = 1, ITEM_STAT_COUNT do
+        if item.stats[dst] == 0 then
+          local o = self:MakeReforgeOption(item, data, src, dst)
+          local key = o.d1 .. ":" .. o.d2
+          if not byEffect[key] or byEffect[key].score < o.score then
+            byEffect[key] = o
+          end
+        end
+      end
+    end
+  end
+
+  local options = {}
+  for _, o in pairs(byEffect) do
+    tinsert(options, o)
+  end
+  self:SortReforgeOptions(options, data, priorityCap)
+  return options
+end
+
 --- Precomputes tight upper bounds for constraint and score pruning.
 --- Works backwards from position 16 to 1, accumulating best-case contributions for aggressive pruning.
 --- @param data table The reforge data structure containing caps and weights
@@ -424,12 +490,26 @@ end
 function ReforgeLite:PrecomputeSuffixBounds(data, allItemOptions, sortedSlots)
   local suffixBounds = {}
 
+  -- Steepest slope of GetCapScore for a cap (its stat weight, or a steeper above-cap
+  -- "after" slope if configured). Used as a linear over-estimate of a cap stat's marginal
+  -- value for the joint per-item score bound below.
+  local function capSlope(cap)
+    if not cap or cap.stat <= 0 then return 0 end
+    local w = self.pdb.weights[cap.stat] or 0
+    for _, p in ipairs(cap.points or {}) do
+      w = max(w, p.after or 0)
+    end
+    return w
+  end
+  local w1, w2 = capSlope(data.caps[1]), capSlope(data.caps[2])
+
   -- Calculate bounds in sorted order (from position 16 to 1)
   for pos = 16, 1, -1 do
     suffixBounds[pos] = {
       cap1 = {min = 0, max = 0},
       cap2 = {min = 0, max = 0},
-      maxScore = 0
+      maxScore = 0,
+      bestMarginal = 0,
     }
 
     -- Use pre-computed reforge options for this item
@@ -444,6 +524,11 @@ function ReforgeLite:PrecomputeSuffixBounds(data, allItemOptions, sortedSlots)
     -- For score pruning: use max score contribution (non-cap stats only)
     local maxScore = -huge
 
+    -- For the joint bound: the best single reforge this item can contribute, valuing its
+    -- cap gains linearly (only positive gains, since w*d under-estimates a negative delta's
+    -- cap loss). Floored at 0 because leaving the item unreforged is always available.
+    local bestMarginal = 0
+
     for _, opt in ipairs(options) do
       local cap1Contrib = opt.d1 or 0
       local cap2Contrib = opt.d2 or 0
@@ -457,6 +542,9 @@ function ReforgeLite:PrecomputeSuffixBounds(data, allItemOptions, sortedSlots)
 
       -- Use only non-cap score contribution for frankenitem bound
       maxScore = max(maxScore, scoreContrib)
+
+      local capGain = (cap1Contrib > 0 and w1 * cap1Contrib or 0) + (cap2Contrib > 0 and w2 * cap2Contrib or 0)
+      bestMarginal = max(bestMarginal, scoreContrib + capGain)
     end
 
     -- Ensure we have valid bounds even if no options
@@ -464,6 +552,7 @@ function ReforgeLite:PrecomputeSuffixBounds(data, allItemOptions, sortedSlots)
     if maxCap1 == -huge then maxCap1 = 0 end
     if minCap2 == huge then minCap2 = 0 end
     if maxCap2 == -huge then maxCap2 = 0 end
+    if maxScore == -huge then maxScore = 0 end
 
     -- Set bounds for this suffix
     if pos == 16 then
@@ -473,6 +562,7 @@ function ReforgeLite:PrecomputeSuffixBounds(data, allItemOptions, sortedSlots)
       suffixBounds[pos].cap2.min = minCap2
       suffixBounds[pos].cap2.max = maxCap2
       suffixBounds[pos].maxScore = maxScore
+      suffixBounds[pos].bestMarginal = bestMarginal
     else
       -- Cumulative: this item plus suffix
       suffixBounds[pos].cap1.min = minCap1 + suffixBounds[pos + 1].cap1.min
@@ -480,6 +570,7 @@ function ReforgeLite:PrecomputeSuffixBounds(data, allItemOptions, sortedSlots)
       suffixBounds[pos].cap2.min = minCap2 + suffixBounds[pos + 1].cap2.min
       suffixBounds[pos].cap2.max = maxCap2 + suffixBounds[pos + 1].cap2.max
       suffixBounds[pos].maxScore = maxScore + suffixBounds[pos + 1].maxScore
+      suffixBounds[pos].bestMarginal = bestMarginal + suffixBounds[pos + 1].bestMarginal
     end
   end
 
@@ -705,33 +796,28 @@ function ReforgeLite:BranchAndBoundSearch(position, currentStats, currentPath, d
       bbConstraintPrunes = bbConstraintPrunes + 1
     end
 
-    -- Upper bound pruning check with frankenitem cap-aware scoring
-    if not shouldPrune and bbBestSolution and position <= 16 and suffixBounds[position + 1] then
-      local tempMethod = { stats = newStats }
-      local currentActualScore = self:CalculateMethodScore(tempMethod)
+    -- Upper bound pruning. Two valid upper bounds; prune if either rules the branch out.
+    local nextBounds = suffixBounds[position + 1]
+    if not shouldPrune and bbBestSolution and nextBounds then
+      local currentActualScore = self:CalculateMethodScore({ stats = newStats })
 
-      -- Calculate frankenitem upper bound: max score + cap-adjusted max cap contributions
-      local upperBound = currentActualScore + (suffixBounds[position + 1] and suffixBounds[position + 1].maxScore or 0)
+      -- Joint bound: each remaining item credited only its single best reforge (tight when
+      -- caps are still unmet -- the case that otherwise explores the whole tree).
+      local jointUB = currentActualScore + nextBounds.bestMarginal
 
-      -- Add max possible cap contributions with cap scoring
-      if suffixBounds[position + 1] then
-        if data.caps[1].stat > 0 then
-          local maxCap1Contrib = suffixBounds[position + 1].cap1.max or 0
-          local projectedCap1Value = (newStats[data.caps[1].stat] or 0) + maxCap1Contrib
-          local currentCap1Score = self:GetCapScore(data.caps[1], newStats[data.caps[1].stat] or 0)
-          local maxCap1Score = self:GetCapScore(data.caps[1], projectedCap1Value)
-          upperBound = upperBound + (maxCap1Score - currentCap1Score)
-        end
-
-        if data.caps[2].stat > 0 then
-          local maxCap2Contrib = suffixBounds[position + 1].cap2.max or 0
-          local projectedCap2Value = (newStats[data.caps[2].stat] or 0) + maxCap2Contrib
-          local currentCap2Score = self:GetCapScore(data.caps[2], newStats[data.caps[2].stat] or 0)
-          local maxCap2Score = self:GetCapScore(data.caps[2], projectedCap2Value)
-          upperBound = upperBound + (maxCap2Score - currentCap2Score)
-        end
+      -- Frankenitem bound: independently-maxed score + saturating cap gains (tighter once a
+      -- cap is already satisfied, where the joint bound keeps over-crediting cap stats).
+      local frankenUB = currentActualScore + nextBounds.maxScore
+      if data.caps[1].stat > 0 then
+        local projected = (newStats[data.caps[1].stat] or 0) + (nextBounds.cap1.max or 0)
+        frankenUB = frankenUB + self:GetCapScore(data.caps[1], projected) - self:GetCapScore(data.caps[1], newStats[data.caps[1].stat] or 0)
+      end
+      if data.caps[2].stat > 0 then
+        local projected = (newStats[data.caps[2].stat] or 0) + (nextBounds.cap2.max or 0)
+        frankenUB = frankenUB + self:GetCapScore(data.caps[2], projected) - self:GetCapScore(data.caps[2], newStats[data.caps[2].stat] or 0)
       end
 
+      local upperBound = min(jointUB, frankenUB)
       if upperBound <= bbBestSolution.score then
         shouldPrune = true
         pruneReason = ("upper bound %.1f <= best %.1f"):format(upperBound, bbBestSolution.score)
@@ -762,7 +848,9 @@ function ReforgeLite:BranchAndBoundSearch(position, currentStats, currentPath, d
         local suffixMaxScore = suffixBounds[position + 1] and suffixBounds[position + 1].maxScore or 0
         local upperBound = currentActualScore + suffixMaxScore
 
-        if upperBound == bbBestSolution.score then
+        if not bbBestSolution then
+          print(("B&B: PRUNING DP choice at pos%d(slot%d) (%s) - %s (no incumbent yet)"):format(position, slot, choiceStr, pruneReason))
+        elseif upperBound == bbBestSolution.score then
           -- Equal scores - just a brief note
           print(("B&B: Pruning equivalent DP choice at pos%d(slot%d) (%s)"):format(position, slot, choiceStr))
         else
@@ -840,10 +928,11 @@ function ReforgeLite:ComputeReforgeBranchBound()
   -- Calculate priority cap once at the beginning
   local priorityCap = self:CalculatePriorityCap(data)
 
-  -- Pre-compute all smart reforge options for all items
+  -- Pre-compute the full reforge option set for all items (B&B searches the same space as
+  -- the DP so it reaches the true optimum; the suffix bounds keep it tractable).
   local allItemOptions = {}
   for slot = 1, 16 do
-    allItemOptions[slot] = self:GetSmartReforgeOptions(data, slot, priorityCap)
+    allItemOptions[slot] = self:GetFullReforgeOptions(data, slot, priorityCap)
   end
 
   -- Get item sorting order using the same priority cap
@@ -994,20 +1083,18 @@ function ReforgeLite:RunAlgorithmComparison()
     print(("DP: Found solution, score: %.1f, constraints: %s, path:%s"):format(
       dpScore, dpConstraintsMet and "Pass" or "Fail", dpPathStr))
 
-  -- Check if smart options will be able to generate all DP choices
-    print("=== Smart Options Coverage ===")
+  -- Check that the B&B option set can generate all DP choices (should be full coverage now)
+    print("=== Option Coverage ===")
     local data = self:InitReforgeClassic()
-
-    -- Calculate priority cap for smart options
     local priorityCap = self:CalculatePriorityCap(data)
 
     for i = 1, #dpMethod.items do
       local dpChoice = dpChoices[i]
       if dpChoice.src or dpChoice.dst then -- Skip "no reforge" choices
-        local smartOptions = self:GetSmartReforgeOptions(data, i, priorityCap)
+        local fullOptions = self:GetFullReforgeOptions(data, i, priorityCap)
 
         local foundDPChoice = false
-        for _, opt in ipairs(smartOptions) do
+        for _, opt in ipairs(fullOptions) do
           if opt.src == dpChoice.src and opt.dst == dpChoice.dst then
             foundDPChoice = true
             break
@@ -1015,7 +1102,7 @@ function ReforgeLite:RunAlgorithmComparison()
         end
         if not foundDPChoice then
           local dpStr = dpChoice.src and ("%d->%d"):format(dpChoice.src, dpChoice.dst) or "none"
-          print(("Item %d: DP choice %s NOT in smart options"):format(i, dpStr))
+          print(("Item %d: DP choice %s NOT in options"):format(i, dpStr))
         end
       end
     end
