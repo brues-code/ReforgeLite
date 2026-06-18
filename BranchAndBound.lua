@@ -549,35 +549,25 @@ function ReforgeLite:BranchAndBoundSearch(position, currentStats, currentPath, d
       isDPChoice = (opt.src == dpChoice.src and opt.dst == dpChoice.dst)
     end
 
-    -- Apply reforge to stats
-    local newStats = CopyTable(currentStats)
-
-    -- Update ALL stats based on the reforge option, not just cap stats
-    -- This is critical for accurate score calculation
-    if opt.src and opt.dst then
+    -- Apply the reforge to currentStats IN PLACE (undone at the end of this iteration). This
+    -- avoids copying the whole stat table for every branch -- the dominant per-node cost.
+    local src, dst = opt.src, opt.dst
+    local srcAmount, dstAmount = 0, 0
+    if src and dst then
       local itemStats = data.method.items[slot].stats
-      local amountRaw = floor(itemStats[opt.src] * REFORGE_COEFF)
-
-      -- Apply stat multipliers
-      local srcAmount = Round(amountRaw * (data.mult[opt.src] or 1))
-      local dstAmount = Round(amountRaw * (data.mult[opt.dst] or 1))
-
-      -- Remove from source stat
-      newStats[opt.src] = (newStats[opt.src] or 0) - srcAmount
-      -- Add to destination stat  
-      newStats[opt.dst] = (newStats[opt.dst] or 0) + dstAmount
-
-      -- Handle conversions
-      if data.conv[opt.src] then
-        for to, factor in pairs(data.conv[opt.src]) do
-          local conv = Round(srcAmount * factor)
-          newStats[to] = (newStats[to] or 0) - conv
+      local amountRaw = floor(itemStats[src] * REFORGE_COEFF)
+      srcAmount = Round(amountRaw * (data.mult[src] or 1))
+      dstAmount = Round(amountRaw * (data.mult[dst] or 1))
+      currentStats[src] = (currentStats[src] or 0) - srcAmount
+      currentStats[dst] = (currentStats[dst] or 0) + dstAmount
+      if data.conv[src] then
+        for to, factor in pairs(data.conv[src]) do
+          currentStats[to] = (currentStats[to] or 0) - Round(srcAmount * factor)
         end
       end
-      if data.conv[opt.dst] then
-        for to, factor in pairs(data.conv[opt.dst]) do
-          local conv = Round(dstAmount * factor)
-          newStats[to] = (newStats[to] or 0) + conv
+      if data.conv[dst] then
+        for to, factor in pairs(data.conv[dst]) do
+          currentStats[to] = (currentStats[to] or 0) + Round(dstAmount * factor)
         end
       end
     end
@@ -588,7 +578,7 @@ function ReforgeLite:BranchAndBoundSearch(position, currentStats, currentPath, d
 
     -- Constraint propagation check first (skipped in the best-effort pass, where no feasible
     -- solution exists and we instead want the closest constraint-failing one).
-    if not bbIgnoreConstraints and not self:CanSatisfyConstraints(position + 1, newStats, suffixBounds, data) then
+    if not bbIgnoreConstraints and not self:CanSatisfyConstraints(position + 1, currentStats, suffixBounds, data) then
       shouldPrune = true
       pruneReason = "constraint violation"
       bbConstraintPrunes = bbConstraintPrunes + 1
@@ -597,7 +587,7 @@ function ReforgeLite:BranchAndBoundSearch(position, currentStats, currentPath, d
     -- Upper bound pruning. Two valid upper bounds; prune if either rules the branch out.
     local nextBounds = suffixBounds[position + 1]
     if not shouldPrune and bbBestSolution and nextBounds then
-      local currentActualScore = self:CalculateMethodScore({ stats = newStats })
+      local currentActualScore = self:CalculateMethodScore({ stats = currentStats })
 
       -- Joint bound: each remaining item credited only its single best reforge (tight when
       -- caps are still unmet -- the case that otherwise explores the whole tree).
@@ -607,12 +597,12 @@ function ReforgeLite:BranchAndBoundSearch(position, currentStats, currentPath, d
       -- cap is already satisfied, where the joint bound keeps over-crediting cap stats).
       local frankenUB = currentActualScore + nextBounds.maxScore
       if data.caps[1].stat > 0 then
-        local projected = (newStats[data.caps[1].stat] or 0) + (nextBounds.cap1.max or 0)
-        frankenUB = frankenUB + self:GetCapScore(data.caps[1], projected) - self:GetCapScore(data.caps[1], newStats[data.caps[1].stat] or 0)
+        local projected = (currentStats[data.caps[1].stat] or 0) + (nextBounds.cap1.max or 0)
+        frankenUB = frankenUB + self:GetCapScore(data.caps[1], projected) - self:GetCapScore(data.caps[1], currentStats[data.caps[1].stat] or 0)
       end
       if data.caps[2].stat > 0 then
-        local projected = (newStats[data.caps[2].stat] or 0) + (nextBounds.cap2.max or 0)
-        frankenUB = frankenUB + self:GetCapScore(data.caps[2], projected) - self:GetCapScore(data.caps[2], newStats[data.caps[2].stat] or 0)
+        local projected = (currentStats[data.caps[2].stat] or 0) + (nextBounds.cap2.max or 0)
+        frankenUB = frankenUB + self:GetCapScore(data.caps[2], projected) - self:GetCapScore(data.caps[2], currentStats[data.caps[2].stat] or 0)
       end
 
       local upperBound = min(jointUB, frankenUB)
@@ -641,8 +631,7 @@ function ReforgeLite:BranchAndBoundSearch(position, currentStats, currentPath, d
       if onDPPath then
         local choiceStr = opt.src and ("%d->%d"):format(opt.src, opt.dst) or "none"
 
-        local tempMethod = { stats = newStats }
-        local currentActualScore = self:CalculateMethodScore(tempMethod)
+        local currentActualScore = self:CalculateMethodScore({ stats = currentStats })
         local suffixMaxScore = suffixBounds[position + 1] and suffixBounds[position + 1].maxScore or 0
         local upperBound = currentActualScore + suffixMaxScore
 
@@ -694,12 +683,28 @@ function ReforgeLite:BranchAndBoundSearch(position, currentStats, currentPath, d
       end
 
       -- Recursive search
-      self:BranchAndBoundSearch(position + 1, newStats, currentPath, data, suffixBounds, allItemOptions, sortedSlots)
+      self:BranchAndBoundSearch(position + 1, currentStats, currentPath, data, suffixBounds, allItemOptions, sortedSlots)
 
       -- Backtrack
       currentPath[position] = nil
     else
       bbBranchesPruned = bbBranchesPruned + 1
+    end
+
+    -- Undo the in-place reforge so the next sibling option starts from a clean state.
+    if src and dst then
+      currentStats[src] = currentStats[src] + srcAmount
+      currentStats[dst] = currentStats[dst] - dstAmount
+      if data.conv[src] then
+        for to, factor in pairs(data.conv[src]) do
+          currentStats[to] = currentStats[to] + Round(srcAmount * factor)
+        end
+      end
+      if data.conv[dst] then
+        for to, factor in pairs(data.conv[dst]) do
+          currentStats[to] = currentStats[to] - Round(dstAmount * factor)
+        end
+      end
     end
   end
 end
