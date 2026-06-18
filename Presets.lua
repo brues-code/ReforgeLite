@@ -42,7 +42,9 @@ function ReforgeLite:InitClassPresets()
     end
     TableUtil.Execute(addonTable.SPEC_IDS, UpdateSpecInfo)
   else
-    self.presets = addonTable.classPresets[addonTable.playerClass]
+    for specId, preset in pairs(addonTable.classPresets[addonTable.playerClass]) do
+      self.presets[specId] = preset
+    end
     UpdateSpecInfo(addonTable.SPEC_IDS[addonTable.playerClass])
   end
 end
