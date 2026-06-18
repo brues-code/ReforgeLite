@@ -22,7 +22,7 @@ function ReforgeLite:CalculatePriorityCap(data)
     if cap.stat > 0 then
       local capTotal = 0
       -- Sum across all items for this cap stat
-      for slot = 1, 16 do
+      for slot = 1, #data.method.items do
         local itemStats = data.method.items[slot].stats
         capTotal = capTotal + (itemStats[cap.stat] or 0)
       end
@@ -60,7 +60,7 @@ end
 function ReforgeLite:GetItemSortingOrder(data, priorityCap)
   local itemOrder = {}
 
-  for slot = 1, 16 do
+  for slot = 1, #data.method.items do
     local itemStats = data.method.items[slot].stats
 
     -- Primary cap contribution (the cap furthest from target)
@@ -298,8 +298,9 @@ function ReforgeLite:PrecomputeSuffixBounds(data, allItemOptions, sortedSlots)
   end
   local w1, w2 = capSlope(data.caps[1]), capSlope(data.caps[2])
 
-  -- Calculate bounds in sorted order (from position 16 to 1)
-  for pos = 16, 1, -1 do
+  -- Calculate bounds in sorted order (from the last position back to 1)
+  local lastPos = #sortedSlots
+  for pos = lastPos, 1, -1 do
     suffixBounds[pos] = {
       cap1 = {min = 0, max = 0},
       cap2 = {min = 0, max = 0},
@@ -350,7 +351,7 @@ function ReforgeLite:PrecomputeSuffixBounds(data, allItemOptions, sortedSlots)
     if maxScore == -huge then maxScore = 0 end
 
     -- Set bounds for this suffix
-    if pos == 16 then
+    if pos == lastPos then
       -- Base case: just this item
       suffixBounds[pos].cap1.min = minCap1
       suffixBounds[pos].cap1.max = maxCap1
@@ -381,7 +382,7 @@ end
 --- @return boolean True if constraints can be satisfied, false if impossible
 function ReforgeLite:CanSatisfyConstraints(position, currentStats, suffixBounds, data)
   -- If we've processed all items, no more flexibility
-  if position > 16 then
+  if position > #data.method.items then
     return true
   end
 
@@ -462,7 +463,7 @@ function ReforgeLite:BranchAndBoundSearch(position, currentStats, currentPath, d
   bbNodesExplored = bbNodesExplored + 1
 
   -- Base case: all items processed
-  if position > 16 then
+  if position > #sortedSlots then
     -- Check if this solution is better than current best
     local constraintsMet = true
     for capIdx = 1, 2 do
@@ -735,7 +736,7 @@ function ReforgeLite:ComputeReforgeBranchBound()
   -- Pre-compute the full reforge option set for all items (B&B searches the same space as
   -- the DP so it reaches the true optimum; the suffix bounds keep it tractable).
   local allItemOptions = {}
-  for slot = 1, 16 do
+  for slot = 1, #data.method.items do
     allItemOptions[slot] = self:GetFullReforgeOptions(data, slot, priorityCap)
   end
 
@@ -751,7 +752,7 @@ function ReforgeLite:ComputeReforgeBranchBound()
       priorityCap, priorityCapStat, otherCap, otherCapStat))
 
     local orderStr = "B&B: Item processing order:"
-    for pos = 1, 16 do
+    for pos = 1, #sortedSlots do
       local slot = sortedSlots[pos]
       local itemStats = data.method.items[slot].stats
       local primaryContrib = (priorityCapStat > 0) and (itemStats[priorityCapStat] or 0) or 0
@@ -812,7 +813,7 @@ function ReforgeLite:ComputeReforgeBranchBound()
   -- Apply best solution if found
   if bbBestSolution and bbBestSolution.path then
     -- Map position-based solution back to slot-based structure
-    for position = 1, 16 do
+    for position = 1, #sortedSlots do
       local slot = sortedSlots[position]
       local reforge = bbBestSolution.path[position]
       if reforge then
