@@ -857,6 +857,8 @@ function ReforgeLite:RunAlgorithmComparison()
   local _, specName = addonTable.compat.GetSpecInfoByID(addonTable.compat.GetCurrentSpecID())
   local _, ilvl = GetAverageItemLevel()
   print(("=== %s %s - %s ilvl ==="):format(specName or "", addonTable.localeClass, ilvl))
+  local version, build = GetBuildInfo()
+  print("WoW Build:", version, build)
 
   local weightsStr = ""
   for i = 1, #self.pdb.weights do
