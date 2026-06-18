@@ -241,7 +241,8 @@ function ReforgeLite:InitPresets()
           classInfo.text = CreateIconMarkup(specInfo[k].icon) .. specInfo[k].name
         end
 
-        for specId, preset in pairs(v) do
+        for specId in pairs(v) do
+          local preset = GetValueOrCallFunction(v, specId)
           local hasSubPresets = type(preset) == "table" and not preset.weights and not preset.caps
 
           if hasSubPresets then
