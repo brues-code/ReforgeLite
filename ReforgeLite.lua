@@ -455,13 +455,12 @@ end
 ---@param value number The stat value
 ---@return number score The calculated score
 function ReforgeLite:GetStatScore (stat, value)
-  if stat == self.pdb.caps[1].stat then
-    return self:GetCapScore (self.pdb.caps[1], value)
-  elseif stat == self.pdb.caps[2].stat then
-    return self:GetCapScore (self.pdb.caps[2], value)
-  else
-    return self.pdb.weights[stat] * value
+  for _, cap in ipairs(self.pdb.caps) do
+    if stat == cap.stat then
+      return self:GetCapScore (cap, value)
+    end
   end
+  return self.pdb.weights[stat] * value
 end
 
 addonTable.WoWSimsOriginTag = "WoWSims"
