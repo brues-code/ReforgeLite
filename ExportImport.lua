@@ -63,8 +63,21 @@ function ReforgeLite:DisplayMessage(message, name, copyOnly)
     end
 end
 
+local function JsonSafe(v)
+    if type(v) ~= "table" then return v end
+    local count = 0
+    for _ in pairs(v) do count = count + 1 end
+    local out = {}
+    if count == #v then
+        for i = 1, #v do out[i] = JsonSafe(v[i]) end
+    else
+        for k, val in pairs(v) do out[tostring(k)] = JsonSafe(val) end
+    end
+    return out
+end
+
 function ReforgeLite:DebugMethod()
-    self:DisplayMessage(addonTable.compat.SerializeJSON(addonTable.methodDebug or {nty="<3"}), C_AddOns.GetAddOnMetadata(addonName, "X-Website"), true)
+    self:DisplayMessage(addonTable.compat.SerializeJSON(JsonSafe(addonTable.methodDebug or {nty="<3"})), C_AddOns.GetAddOnMetadata(addonName, "X-Website"), true)
 end
 
 function ReforgeLite:PrintLog()
