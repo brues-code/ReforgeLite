@@ -23,8 +23,7 @@ addonTable.AmplificationItems = {
   [105609] = true, -- Thok's Tail Tip, Heroic Warforged
 }
 
-
-addonTable.RandPropPoints = {
+local RandPropPoints = {
     [463] = 1710,
     [528] = 3134,
     [529] = 3163,
@@ -85,5 +84,5 @@ addonTable.RandPropPoints = {
 ---@param iLvl number Item level
 ---@return number factor Stat multiplier (e.g. 1.05) for Haste/Mastery/Spirit
 function addonTable.GetAmplificationFactor(iLvl)
-    return 1 + 0.01 * floor((addonTable.RandPropPoints[iLvl] or 0) * 0.00177)
+    return 1 + 0.01 * floor((RandPropPoints[iLvl] or 0) * 0.00177)
 end

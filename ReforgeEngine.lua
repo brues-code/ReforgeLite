@@ -35,10 +35,8 @@ end
 function ReforgeLite:GetConversion()
   self.conversion = wipe(self.conversion or {})
   self.specID = addonTable.compat.GetCurrentSpecID()
-  local classInfo = addonTable.STAT_CONVERSIONS and addonTable.STAT_CONVERSIONS[playerClass]
+  local classInfo = addonTable.STAT_CONVERSIONS[playerClass]
   if classInfo then
-    -- A conversion entry may be a static table (MoP) or a function returning one
-    -- (Cata, which reads live talent points for partial Spirit->Hit rates).
     if classInfo.base then
       MergeTable(self.conversion, GetValueOrCallFunction(classInfo, "base"))
     end
