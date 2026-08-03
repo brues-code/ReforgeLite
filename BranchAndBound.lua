@@ -17,18 +17,12 @@ local dpChoices
 function ReforgeLite:CalculatePriorityCap(data)
   -- Calculate total stats for each cap across all items
   local capDistances = {}
+  local baseline = self:GetBaselineStats(data)
   for i = 1, 2 do
     local cap = data.caps[i]
     if cap.stat > 0 then
-      local capTotal = 0
-      -- Sum across all items for this cap stat
-      for slot = 1, #data.method.items do
-        local itemStats = data.method.items[slot].stats
-        capTotal = capTotal + (itemStats[cap.stat] or 0)
-      end
-
-      -- Add initial stats (character base stats without items)
-      capTotal = capTotal + (data.initial[cap.stat] or 0)
+      -- Character base plus every item's un-reforged stats, in amplified space
+      local capTotal = baseline[cap.stat] or 0
 
       -- Calculate target value (use first constraint point for simplicity)
       local capTarget = 0
@@ -770,18 +764,8 @@ function ReforgeLite:ComputeReforgeBranchBound()
   local suffixBounds = self:PrecomputeSuffixBounds(data, allItemOptions, sortedSlots)
 
 
-  -- Initialize starting stats
-  local initialStats = {}
-  for i = 1, ITEM_STAT_COUNT do
-    initialStats[i] = data.initial[i] or 0
-  end
-
-  -- Add base item stats to initial
-  for i = 1, #data.method.items do
-    for stat = 1, ITEM_STAT_COUNT do
-      initialStats[stat] = (initialStats[stat] or 0) + (data.method.items[i].stats[stat] or 0)
-    end
-  end
+  -- Initialize starting stats (character + item base stats, amplified to match option deltas)
+  local initialStats = self:GetBaselineStats(data)
 
   -- Run branch and bound search
   local currentPath = {}

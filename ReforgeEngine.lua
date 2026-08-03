@@ -271,6 +271,24 @@ function ReforgeLite:InitializeMethod()
   return method, orgitems
 end
 
+---Computes the per-stat baseline: character base plus every equipped item's un-reforged
+---stats, with amplification applied. data.initial and item stats are stored raw
+---(unamplified), while reforge option deltas and the cap targets live in amplified space,
+---so the multiplier has to be applied here or the solver compares two spaces against each other.
+---@param data table Global reforge data (initial, method.items, mult)
+---@return table<number, number> stats Amplified baseline per stat ID
+function ReforgeLite:GetBaselineStats(data)
+  local stats = {}
+  for i = 1, addonTable.itemStatCount do
+    local total = data.initial[i] or 0
+    for j = 1, #data.method.items do
+      total = total + (data.method.items[j].stats[i] or 0)
+    end
+    stats[i] = Round(total * (data.mult[i] or 1))
+  end
+  return stats
+end
+
 function ReforgeLite:InitReforgeClassic()
   local method, orgitems = self:InitializeMethod()
   local data = {}
@@ -319,20 +337,15 @@ function ReforgeLite:InitReforgeClassic()
   end
   for src, c in pairs(data.conv) do
     for dst, f in pairs(c) do
-      data.initial[dst] = data.initial[dst] - Round(reforged[src] * (data.mult[src] or 1) * f)
+      data.initial[dst] = data.initial[dst] - Round(reforged[src] * (data.mult[src] or 1) * f) / (data.mult[dst] or 1)
     end
   end
+  local baseline = self:GetBaselineStats(data)
   if data.caps[1].stat > 0 then
-    data.caps[1].init = data.initial[data.caps[1].stat]
-    for i = 1, #data.method.items do
-      data.caps[1].init = data.caps[1].init + data.method.items[i].stats[data.caps[1].stat]
-    end
+    data.caps[1].init = baseline[data.caps[1].stat]
   end
   if data.caps[2].stat > 0 then
-    data.caps[2].init = data.initial[data.caps[2].stat]
-    for i = 1, #data.method.items do
-      data.caps[2].init = data.caps[2].init + data.method.items[i].stats[data.caps[2].stat]
-    end
+    data.caps[2].init = baseline[data.caps[2].stat]
   end
   if data.caps[1].stat == 0 then
     data.caps[1], data.caps[2] = data.caps[2], data.caps[1]

@@ -23,68 +23,14 @@ local AmplificationItems = {
   [105609] = true, -- Thok's Tail Tip, Heroic Warforged
 }
 
-local RandPropPoints = {
-    [463] = 1710,
-    [528] = 3134,
-    [529] = 3163,
-    [530] = 3193,
-    [531] = 3223,
-    [532] = 3253,
-    [533] = 3283,
-    [534] = 3314,
-    [535] = 3345,
-    [536] = 3376,
-    [537] = 3408,
-    [538] = 3440,
-    [539] = 3472,
-    [540] = 3505,
-    [541] = 3537,
-    [542] = 3571,
-    [543] = 3604,
-    [544] = 3638,
-    [545] = 3672,
-    [546] = 3706,
-    [547] = 3741,
-    [548] = 3776,
-    [549] = 3811,
-    [550] = 3847,
-    [551] = 3883,
-    [552] = 3919,
-    [553] = 3956,
-    [554] = 3993,
-    [555] = 4030,
-    [556] = 4068,
-    [557] = 4106,
-    [558] = 4145,
-    [559] = 4183,
-    [560] = 4222,
-    [561] = 4262,
-    [562] = 4302,
-    [563] = 4342,
-    [564] = 4383,
-    [565] = 4424,
-    [566] = 4465,
-    [567] = 4507,
-    [568] = 4549,
-    [569] = 4592,
-    [570] = 4635,
-    [571] = 4678,
-    [572] = 4722,
-    [573] = 4766,
-    [574] = 4811,
-    [575] = 4856,
-    [576] = 4901,
-    [577] = 4947,
-    [578] = 4994,
-    [579] = 5040,
-    [580] = 5087,
-}
-
----Gets the Amplify equip-bonus multiplier for an item (1 if it isn't an amplification trinket)
+---Gets the Amplify equip-bonus multiplier for an item (nil if it isn't an amplification trinket)
+---The amp effect scales off a server-side float budget, not the integer RandPropPoints table,
+---and is not rounded. This curve reconstructs that budget (fitted by wowsims against live
+---character-sheet readings) so it matches the game's applied value at every item level.
 ---@param itemInfo table Item info with itemId and ilvl
 ---@return number factor Stat multiplier (e.g. 1.05) for Haste/Mastery/Spirit
 function addonTable.GetAmplificationFactor(itemInfo)
     if AmplificationItems[itemInfo.itemId] then
-        return 1 + 0.01 * floor((RandPropPoints[itemInfo.ilvl] or 0) * 0.00177)
+        return 1 + 22.78695 * exp(0.00932545 * itemInfo.ilvl) * 0.00176999997 / 100
     end
 end
